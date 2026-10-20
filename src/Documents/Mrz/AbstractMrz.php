@@ -15,34 +15,37 @@ use StdNumCentroamerica\ValidationError;
  *
  * Valida el formato, los componentes (tipo de documento, sexo, fechas, caracteres de
  * emisor, nacionalidad y nombre) y los dígitos de control del número de documento,
- * nacimiento, vencimiento, datos opcionales (TD3) y el compuesto. Con un número de
- * documento de más de nueve caracteres no se comprueba su dígito propio, porque el
- * dígito compuesto ya cubre esas posiciones.
+ * nacimiento, vencimiento, datos opcionales (TD3) y el compuesto. Una fecha
+ * desconocida (`<<<<<<`) lleva `<` o `0` como dígito.
  */
 abstract class AbstractMrz extends AbstractDocument implements GeneratesNumbers
 {
+    /** Sin I ni O, que se confunden con 1 y 0. */
+    private const NUMBER_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+
     private const SAMPLE_NAMES = ['ERIKSSON' => 'ANNA<MARIA', 'SAMPLE' => 'JOHN', 'EXAMPLE' => 'JANE<ROE'];
 
-    /** Primeras letras admitidas en el código de documento (P pasaporte; A, C, I identidad). */
+    /** Primeras letras admitidas en el código de documento. */
     protected const DOCUMENT_CODES = '';
 
     /** Longitud de cada línea. */
     protected const LINE_LENGTH = 0;
 
-    /**
-     * Campos de la MRZ compacta. Los `*Check` son el carácter de control tal como aparece;
-     * `numberCheck` es null cuando el número continúa en los datos opcionales (`overflow`).
-     *
-     * @return array{
-     *     code: string, issuer: string, name: string, number: string, numberCheck: ?string,
-     *     overflow: string, nationality: string, birth: string, birthCheck: string, sex: string,
-     *     expiry: string, expiryCheck: string, optional: string, optionalCheck: ?string,
-     *     compositeCheck: string, compositeData: string
-     * }
-     */
-    abstract protected function fields(string $compact): array;
+    /** Posición (desde 0) del dígito compuesto en la MRZ compacta. */
+    protected const COMPOSITE_AT = 0;
 
-    abstract public function generate(): string;
+    abstract protected function fields(string $compact): MrzFields;
+
+    /** MRZ completa con `<` en lugar del dígito compuesto, que {@see generate()} calcula. */
+    abstract protected function draft(): string;
+
+    public function generate(): string
+    {
+        $draft = $this->draft();
+        $composite = self::checkDigit($this->fields($draft)->compositeData);
+
+        return substr_replace($draft, (string) $composite, static::COMPOSITE_AT, 1);
+    }
 
     /** Dígito de control ICAO de una cadena de caracteres `A-Z`, `0-9` y `<`. */
     public static function checkDigit(string $field): int
@@ -57,7 +60,10 @@ abstract class AbstractMrz extends AbstractDocument implements GeneratesNumbers
         return $sum % 10;
     }
 
-    /** Datos de la MRZ, o null si no es válida. */
+    /**
+     * Datos de la MRZ, o null si no es válida. En TD1 los dos campos de datos opcionales
+     * se devuelven juntos.
+     */
     public function parse(string $mrz): ?MrzData
     {
         $compact = $this->compact($mrz);
@@ -65,20 +71,20 @@ abstract class AbstractMrz extends AbstractDocument implements GeneratesNumbers
             return null;
         }
 
-        $f = $this->fields($compact);
-        [$surname, $given] = array_pad(explode('<<', rtrim($f['name'], '<'), 2), 2, '');
+        $fields = $this->fields($compact);
+        [$surname, $given] = array_pad(explode('<<', rtrim($fields->name, '<'), 2), 2, '');
 
         return new MrzData(
-            documentCode: rtrim($f['code'], '<'),
-            issuingState: rtrim($f['issuer'], '<'),
+            documentCode: rtrim($fields->code, '<'),
+            issuingState: rtrim($fields->issuer, '<'),
             surname: trim(str_replace('<', ' ', $surname)),
             givenNames: trim(str_replace('<', ' ', $given)),
-            documentNumber: rtrim($f['number'], '<') . $f['overflow'],
-            nationality: rtrim($f['nationality'], '<'),
-            birthDate: str_contains($f['birth'], '<') ? null : $f['birth'],
-            sex: $f['sex'] === '<' ? null : $f['sex'],
-            expiryDate: str_contains($f['expiry'], '<') ? null : $f['expiry'],
-            optionalData: rtrim($f['optional'], '<'),
+            documentNumber: rtrim($fields->number, '<'),
+            nationality: rtrim($fields->nationality, '<'),
+            birthDate: $fields->birth === '<<<<<<' ? null : $fields->birth,
+            sex: $fields->sex === '<' ? null : $fields->sex,
+            expiryDate: $fields->expiry === '<<<<<<' ? null : $fields->expiry,
+            optionalData: rtrim($fields->optional, '<'),
         );
     }
 
@@ -86,56 +92,93 @@ abstract class AbstractMrz extends AbstractDocument implements GeneratesNumbers
     public function format(string $number): string
     {
         $compact = $this->compact($number);
-        $length = static::LINE_LENGTH;
 
-        return $length > 0 && strlen($compact) % $length === 0
-            ? implode("\n", str_split($compact, $length))
+        return strlen($compact) % static::LINE_LENGTH === 0
+            ? implode("\n", str_split($compact, static::LINE_LENGTH))
             : $compact;
     }
 
     protected function checkContent(string $compact): ?ValidationError
     {
-        $f = $this->fields($compact);
+        $fields = $this->fields($compact);
 
-        return $this->checkComponents($f) ?? $this->checkDigits($f);
+        return $this->checkComponents($fields) ?? $this->checkDigits($fields);
     }
 
     /**
-     * Caracteres del número de documento que continúan en los datos opcionales: los que
-     * van antes del primer `<`, sin el último, que es su dígito de control.
+     * Con un número de más de nueve caracteres, la posición de su dígito lleva `<` y el resto
+     * del número y su dígito van al inicio de los datos opcionales.
+     *
+     * @return array{string, string, string} número completo, su dígito y los datos opcionales restantes
      */
-    protected static function continuation(string $optional): string
+    protected static function longNumber(string $number, string $check, string $optional): array
     {
+        if ($check !== '<') {
+            return [$number, $check, $optional];
+        }
+
         $head = explode('<', $optional, 2)[0];
 
-        return substr($head, 0, -1);
+        return $head === ''
+            ? [$number, '<', $optional]
+            : [$number . substr($head, 0, -1), substr($head, -1), substr($optional, strlen($head))];
     }
 
-    /** @param array<string, mixed> $f */
-    private function checkComponents(array $f): ?ValidationError
+    /** Número de documento de ejemplo: nueve caracteres al azar. */
+    protected static function randomNumber(): string
     {
-        $valid = str_contains(static::DOCUMENT_CODES, $f['code'][0])
-            && preg_match('/^[A-Z<]$/', $f['code'][1]) === 1
-            && preg_match('/^[A-Z<]{3}$/', $f['issuer']) === 1
-            && preg_match('/^[A-Z<]{3}$/', $f['nationality']) === 1
-            && preg_match('/^[A-Z<]+$/', $f['name']) === 1
-            && in_array($f['sex'], ['M', 'F', 'X', '<'], true)
-            && self::validDate($f['birth'], $f['birthCheck'])
-            && self::validDate($f['expiry'], $f['expiryCheck']);
+        $last = strlen(self::NUMBER_ALPHABET) - 1;
+
+        return implode('', array_map(
+            static fn (): string => self::NUMBER_ALPHABET[random_int(0, $last)],
+            range(1, 9),
+        ));
+    }
+
+    /** @return array{number: string, birth: string, sex: string, expiry: string, surname: string, given: string} */
+    protected static function randomHolder(): array
+    {
+        $surname = array_rand(self::SAMPLE_NAMES);
+
+        return [
+            'number' => self::randomNumber(),
+            'birth' => sprintf('%02d%02d%02d', random_int(50, 99), random_int(1, 12), random_int(1, 28)),
+            'sex' => ['M', 'F', '<'][random_int(0, 2)],
+            'expiry' => sprintf('%02d%02d%02d', random_int(27, 40), random_int(1, 12), random_int(1, 28)),
+            'surname' => $surname,
+            'given' => self::SAMPLE_NAMES[$surname],
+        ];
+    }
+
+    /** `<` hasta completar $length. */
+    protected static function pad(string $text, int $length): string
+    {
+        return str_pad($text, $length, '<');
+    }
+
+    private function checkComponents(MrzFields $fields): ?ValidationError
+    {
+        $valid = str_contains(static::DOCUMENT_CODES, $fields->code[0])
+            && preg_match('/^[A-Z<]$/', $fields->code[1]) === 1
+            && preg_match('/^[A-Z<]{3}$/', $fields->issuer) === 1
+            && preg_match('/^[A-Z<]{3}$/', $fields->nationality) === 1
+            && preg_match('/^[A-Z][A-Z<]*$/', $fields->name) === 1
+            && in_array($fields->sex, ['M', 'F', 'X', '<'], true)
+            && self::validDate($fields->birth, $fields->birthCheck)
+            && self::validDate($fields->expiry, $fields->expiryCheck);
 
         return $valid ? null : ValidationError::Component;
     }
 
-    /** @param array<string, mixed> $f */
-    private function checkDigits(array $f): ?ValidationError
+    private function checkDigits(MrzFields $fields): ?ValidationError
     {
-        $ok = ($f['numberCheck'] === null || self::matches($f['number'], $f['numberCheck']))
-            && (str_starts_with($f['birth'], '<') || self::matches($f['birth'], $f['birthCheck']))
-            && (str_starts_with($f['expiry'], '<') || self::matches($f['expiry'], $f['expiryCheck']))
-            && ($f['optionalCheck'] === null || self::optionalMatches($f['optional'], $f['optionalCheck']))
-            && self::matches($f['compositeData'], $f['compositeCheck']);
+        $valid = self::matches($fields->number, $fields->numberCheck)
+            && self::dateMatches($fields->birth, $fields->birthCheck)
+            && self::dateMatches($fields->expiry, $fields->expiryCheck)
+            && ($fields->optionalCheck === null || self::optionalMatches($fields->optional, $fields->optionalCheck))
+            && self::matches($fields->compositeData, $fields->compositeCheck);
 
-        return $ok ? null : ValidationError::Checksum;
+        return $valid ? null : ValidationError::Checksum;
     }
 
     private static function matches(string $field, string $check): bool
@@ -149,38 +192,20 @@ abstract class AbstractMrz extends AbstractDocument implements GeneratesNumbers
         return trim($field, '<') === '' ? in_array($check, ['<', '0'], true) : self::matches($field, $check);
     }
 
-    /** Fecha AAMMDD válida, o desconocida (`<<<<<<` con dígito `<`). */
+    /** Una fecha desconocida (`<<<<<<`) ya se validó en {@see validDate()}. */
+    private static function dateMatches(string $date, string $check): bool
+    {
+        return $date === '<<<<<<' || self::matches($date, $check);
+    }
+
+    /** Fecha AAMMDD válida, o desconocida (`<<<<<<` con dígito `<` o `0`). */
     private static function validDate(string $date, string $check): bool
     {
         if ($date === '<<<<<<') {
-            return $check === '<';
+            return in_array($check, ['<', '0'], true);
         }
 
         return preg_match('/^\d{6}$/', $date) === 1
             && checkdate((int) substr($date, 2, 2), (int) substr($date, 4, 2), 2000);
-    }
-
-    /** @return array{number: string, birth: string, sex: string, expiry: string, surname: string, given: string} */
-    protected static function randomHolder(): array
-    {
-        $surname = array_rand(self::SAMPLE_NAMES);
-
-        return [
-            'number' => implode('', array_map(
-                static fn (): string => 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789'[random_int(0, 33)],
-                range(1, 9),
-            )),
-            'birth' => sprintf('%02d%02d%02d', random_int(50, 99), random_int(1, 12), random_int(1, 28)),
-            'sex' => ['M', 'F', '<'][random_int(0, 2)],
-            'expiry' => sprintf('%02d%02d%02d', random_int(27, 40), random_int(1, 12), random_int(1, 28)),
-            'surname' => $surname,
-            'given' => self::SAMPLE_NAMES[$surname],
-        ];
-    }
-
-    /** `<` hasta completar $length. */
-    protected static function pad(string $text, int $length): string
-    {
-        return str_pad($text, $length, '<');
     }
 }

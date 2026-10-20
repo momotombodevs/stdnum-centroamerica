@@ -23,6 +23,7 @@ class Td1Test extends DocumentTestCase
             // Ejemplo de la especificación ICAO 9303 (Utopía)
             'ICAO, con saltos de línea' => [self::SPECIMEN],
             'ICAO, en una línea' => [str_replace("\n", '', self::SPECIMEN)],
+            'tarjeta pasaporte (tipo P)' => ["P<UTOD231458907<<<<<<<<<<<<<<<\n7408122F1204159UTO<<<<<<<<<<<6\nERIKSSON<<ANNA<MARIA<<<<<<<<<<"],
         ];
     }
 
@@ -37,7 +38,7 @@ class Td1Test extends DocumentTestCase
             'dígito compuesto' => ["I<UTOD231458907<<<<<<<<<<<<<<<\n7408122F1204159UTO<<<<<<<<<<<7\nERIKSSON<<ANNA<MARIA<<<<<<<<<<"],
             'sexo inválido' => ["I<UTOD231458907<<<<<<<<<<<<<<<\n7408122Q1204159UTO<<<<<<<<<<<6\nERIKSSON<<ANNA<MARIA<<<<<<<<<<"],
             'mes de nacimiento inválido' => ["I<UTOD231458907<<<<<<<<<<<<<<<\n7438122F1204159UTO<<<<<<<<<<<6\nERIKSSON<<ANNA<MARIA<<<<<<<<<<"],
-            'tipo de documento inválido' => ["P<UTOD231458907<<<<<<<<<<<<<<<\n7408122F1204159UTO<<<<<<<<<<<6\nERIKSSON<<ANNA<MARIA<<<<<<<<<<"],
+            'tipo de documento inválido' => ["Q<UTOD231458907<<<<<<<<<<<<<<<\n7408122F1204159UTO<<<<<<<<<<<6\nERIKSSON<<ANNA<MARIA<<<<<<<<<<"],
         ];
     }
 

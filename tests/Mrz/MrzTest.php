@@ -73,32 +73,91 @@ class MrzTest extends TestCase
         $this->assertSame(ValidationError::Component, $td3->validate(str_replace('UTO7408122F', 'UTO7413122F', self::TD3))->error);
     }
 
-    public function test_fecha_desconocida_se_acepta_con_digito_de_control_en_blanco(): void
+    public function test_fecha_desconocida_se_acepta_con_digito_en_blanco_o_cero(): void
     {
-        $l1 = 'P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<';
-        $l2 = 'L898902C36UTO' . '<<<<<<' . '<' . 'F' . '120415' . '9' . 'ZE184226B<<<<<' . '1';
-        $composite = AbstractMrz::checkDigit(substr($l2, 0, 10) . substr($l2, 13, 7) . substr($l2, 21, 22));
+        foreach (['<', '0'] as $check) {
+            $l1 = 'P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<';
+            $l2 = 'L898902C36UTO' . '<<<<<<' . $check . 'F' . '120415' . '9' . 'ZE184226B<<<<<' . '1';
+            $composite = AbstractMrz::checkDigit(substr($l2, 0, 10) . substr($l2, 13, 7) . substr($l2, 21, 22));
+            $mrz = $l1 . $l2 . $composite;
 
-        $this->assertTrue((new Td3())->isValid($l1 . $l2 . $composite));
-        $this->assertNull((new Td3())->parse($l1 . $l2 . $composite)?->birthDate);
+            $this->assertTrue((new Td3())->isValid($mrz), $check);
+            $this->assertNull((new Td3())->parse($mrz)?->birthDate);
+        }
+    }
+
+    public function test_una_fecha_desconocida_con_otro_digito_es_un_error_de_componente(): void
+    {
+        $l2 = 'L898902C36UTO' . '<<<<<<' . '5' . 'F' . '120415' . '9' . 'ZE184226B<<<<<' . '1';
+        $mrz = 'P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<' . $l2 . '0';
+
+        $this->assertSame(ValidationError::Component, (new Td3())->validate($mrz)->error);
+    }
+
+    public function test_nombre_sin_apellido_es_un_error_de_componente(): void
+    {
+        $this->assertSame(
+            ValidationError::Component,
+            (new Td3())->validate(str_replace('ERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<', str_repeat('<', 39), self::TD3))->error,
+        );
+    }
+
+    /** MRZ TD1 con un número de 12 caracteres cuyo dígito de control es $check. */
+    private static function longTd1(string $check): string
+    {
+        $number = 'ABC123456789';
+        $l1 = str_pad('I<UTO' . substr($number, 0, 9) . '<' . substr($number, 9) . $check, 30, '<');
+        $l2 = '7408122F1204159UTO' . str_repeat('<', 11);
+        $composite = AbstractMrz::checkDigit(substr($l1, 5, 25) . substr($l2, 0, 7) . substr($l2, 8, 7) . substr($l2, 18, 11));
+
+        return $l1 . $l2 . $composite . str_pad('ERIKSSON<<ANNA', 30, '<');
     }
 
     public function test_numero_de_documento_de_mas_de_nueve_caracteres_en_td1(): void
     {
-        $number = 'ABC123456789';
-        $l1 = 'I<UTO' . substr($number, 0, 9) . '<' . substr($number, 9) . AbstractMrz::checkDigit($number);
-        $l1 = str_pad($l1, 30, '<');
-        $l2 = '7408122' . 'F' . '1204159' . 'UTO' . str_repeat('<', 11);
-        $l2 = substr($l2, 0, 7) . 'F' . substr($l2, 8);
-        $composite = AbstractMrz::checkDigit(substr($l1, 5, 25) . substr($l2, 0, 7) . substr($l2, 8, 7) . substr($l2, 18, 11));
-        $mrz = $l1 . $l2 . $composite . str_pad('ERIKSSON<<ANNA', 30, '<');
+        $mrz = self::longTd1((string) AbstractMrz::checkDigit('ABC123456789'));
 
         $td1 = new Td1();
         $this->assertTrue($td1->isValid($mrz));
-        $this->assertSame($number, $td1->parse($mrz)?->documentNumber);
+        $data = $td1->parse($mrz);
+        $this->assertSame('ABC123456789', $data?->documentNumber);
+        $this->assertSame('', $data->optionalData); // la continuación no se repite en los datos opcionales
 
         // El compuesto cubre la continuación: alterarla se detecta.
         $this->assertFalse($td1->isValid(substr_replace($mrz, '0', 16, 1)));
+    }
+
+    public function test_el_digito_del_numero_largo_se_verifica_aunque_el_compuesto_sea_coherente(): void
+    {
+        $right = AbstractMrz::checkDigit('ABC123456789');
+        $wrong = (string) (($right + 1) % 10);
+
+        $this->assertSame(ValidationError::Checksum, (new Td1())->validate(self::longTd1($wrong))->error);
+    }
+
+    public function test_un_numero_de_nueve_caracteres_no_puede_omitir_su_digito(): void
+    {
+        $l1 = 'I<UTOD23145890<<<<<<<<<<<<<<<<';
+        $l2 = '7408122F1204159UTO<<<<<<<<<<<';
+        $composite = AbstractMrz::checkDigit(substr($l1, 5, 25) . substr($l2, 0, 7) . substr($l2, 8, 7) . substr($l2, 18, 11));
+
+        $this->assertSame(
+            ValidationError::Checksum,
+            (new Td1())->validate($l1 . $l2 . $composite . str_pad('ERIKSSON<<ANNA', 30, '<'))->error,
+        );
+    }
+
+    public function test_numero_de_documento_de_mas_de_nueve_caracteres_en_td2(): void
+    {
+        $number = 'ABC123456789';
+        $l1 = str_pad('I<UTOERIKSSON<<ANNA', 36, '<');
+        $l2 = 'ABC123456' . '<' . 'UTO' . '740812' . '2' . 'F' . '120415' . '9'
+            . '789' . AbstractMrz::checkDigit($number) . '<<<';
+        $composite = AbstractMrz::checkDigit(substr($l2, 0, 10) . substr($l2, 13, 7) . substr($l2, 21, 14));
+        $mrz = $l1 . $l2 . $composite;
+
+        $this->assertTrue((new Td2())->isValid($mrz));
+        $this->assertSame($number, (new Td2())->parse($mrz)?->documentNumber);
     }
 
     public function test_format_reparte_las_lineas(): void
