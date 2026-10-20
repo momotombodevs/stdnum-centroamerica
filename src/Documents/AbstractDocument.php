@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace StdNumCentroamerica\Documents;
 
 use StdNumCentroamerica\Contracts\DocumentInterface;
+use StdNumCentroamerica\ValidationError;
+use StdNumCentroamerica\ValidationResult;
 
 abstract class AbstractDocument implements DocumentInterface
 {
@@ -11,12 +15,23 @@ abstract class AbstractDocument implements DocumentInterface
 
     public function isValid(string $number): bool
     {
-        return preg_match(static::PATTERN, $this->compact($number)) === 1;
+        return $this->validate($number)->isValid();
+    }
+
+    public function validate(string $number): ValidationResult
+    {
+        return ValidationResult::from($this->check($this->compact($number)));
+    }
+
+    /** Primer error de un número compacto, o null si es válido; por defecto solo comprueba PATTERN. */
+    protected function check(string $compact): ?ValidationError
+    {
+        return preg_match(static::PATTERN, $compact) === 1 ? null : ValidationError::Format;
     }
 
     public function compact(string $number): string
     {
-        return strtoupper(preg_replace('/[\s\-]/', '', $number));
+        return strtoupper(str_replace([' ', "\t", "\n", "\r", "\f", "\v", '-'], '', $number));
     }
 
     /** Sin agrupación propia, el formato es el número compacto. */

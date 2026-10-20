@@ -4,3 +4,4 @@ vendor/
 .remember/
 composer.lock
 plan-stdnum-centroamerica.md
+.php-cs-fixer.cache

@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace StdNumCentroamerica\Tests;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use StdNumCentroamerica\Contracts\DocumentInterface;
 use StdNumCentroamerica\Documents\CostaRica\Nite;
 use StdNumCentroamerica\Documents\Guatemala\Nit;
 use StdNumCentroamerica\Registry;
@@ -21,7 +24,7 @@ class RegistryTest extends TestCase
     public function test_todas_las_claves_se_pueden_instanciar(): void
     {
         foreach (Registry::keys() as $key) {
-            $this->assertNotNull(Registry::make($key), $key);
+            $this->assertInstanceOf(DocumentInterface::class, Registry::make($key), $key);
         }
     }
 

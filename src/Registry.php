@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace StdNumCentroamerica;
 
 use InvalidArgumentException;
@@ -52,6 +54,12 @@ class Registry
             ?? throw new InvalidArgumentException("Documento no soportado: {$key}");
 
         return new $class(...$options);
+    }
+
+    /** @param array<string, mixed> $options ver {@see make()} */
+    public static function validate(string $key, string $number, array $options = []): ValidationResult
+    {
+        return self::make($key, $options)->validate($number);
     }
 
     /** @param array<string, mixed> $options ver {@see make()} */

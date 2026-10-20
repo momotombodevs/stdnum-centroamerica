@@ -24,6 +24,22 @@ Registry::make('ni.cedula')->format('0010101900001n');    // "001-010190-0001N"
 Registry::make('ni.cedula')->compact('001-010190-0001n'); // "0010101900001N"
 ```
 
+`validate()` devuelve además el motivo del fallo, útil para mostrar mensajes de error:
+
+```php
+use StdNumCentroamerica\ValidationError;
+
+$result = Registry::validate('ni.cedula', '001-010190-0001A');
+$result->isValid(); // false
+$result->error;     // ValidationError::Checksum
+```
+
+| `ValidationError` | Significado |
+|-------------------|-------------|
+| `Format` | longitud, caracteres o estructura incorrectos |
+| `Component` | un componente (fecha, departamento, municipio, prefijo) fuera de lo permitido |
+| `Checksum` | el dígito o la letra de control no coincide |
+
 La cédula valida la letra por defecto. Se puede ajustar con opciones, que `Registry` pasa al constructor:
 
 ```php
@@ -80,10 +96,12 @@ Notas:
 
 ```
 composer install
-vendor/bin/phpunit
+composer ci   # estilo (php-cs-fixer), análisis estático (phpstan nivel 8) y pruebas
 ```
 
-Para agregar un documento: clase en `src/Documents/<Pais>/` que extienda `AbstractDocument` (con `PATTERN` si basta una expresión regular), prueba en `tests/<Pais>/` que extienda `DocumentTestCase`, clave en `Registry::DOCUMENTS` y fila en la tabla de arriba y en `docs/fuentes.md`.
+`composer cs:fix` aplica el estilo; `composer test`, `composer analyse` y `composer cs` corren cada paso por separado.
+
+Para agregar un documento: clase en `src/Documents/<Pais>/` que extienda `AbstractDocument` (con `PATTERN` si basta una expresión regular; las reglas adicionales van en `check()`, que devuelve un `ValidationError` o `null`), prueba en `tests/<Pais>/` que extienda `DocumentTestCase`, clave en `Registry::DOCUMENTS` y fila en la tabla de arriba y en `docs/fuentes.md`.
 
 ## Licencia
 

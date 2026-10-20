@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace StdNumCentroamerica\Documents\Nicaragua;
 
 use StdNumCentroamerica\Documents\AbstractDocument;
+use StdNumCentroamerica\ValidationError;
 
 /**
  * RUC (DGI), 14 caracteres: personas jurídicas J + 13 dígitos; nacionales sin cédula
@@ -17,12 +20,13 @@ class Ruc extends AbstractDocument
     {
     }
 
-    public function isValid(string $number): bool
+    protected function check(string $compact): ?ValidationError
     {
-        $compact = $this->compact($number);
+        if (str_starts_with($compact, '0000')) {
+            return ValidationError::Component;
+        }
 
-        return !str_starts_with($compact, '0000')
-            && (preg_match('/^[JNRE]\d{13}$/', $compact) === 1 || $this->cedula->isValid($compact));
+        return preg_match('/^[JNRE]\d{13}$/', $compact) === 1 ? null : $this->cedula->validate($compact)->error;
     }
 
     public function format(string $number): string

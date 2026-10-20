@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace StdNumCentroamerica\Documents\Guatemala;
 
 use StdNumCentroamerica\Documents\AbstractDocument;
+use StdNumCentroamerica\ValidationError;
 
 /**
  * NIT (SAT). Nivel: completa (fórmula de código abierto).
@@ -14,12 +17,10 @@ class Nit extends AbstractDocument
 {
     protected const PATTERN = '/^\d{1,11}[0-9K]$/';
 
-    public function isValid(string $number): bool
+    protected function check(string $compact): ?ValidationError
     {
-        $compact = $this->compact($number);
-
-        return parent::isValid($compact)
-            && self::checkDigit(substr($compact, 0, -1)) === substr($compact, -1);
+        return parent::check($compact)
+            ?? (self::checkDigit(substr($compact, 0, -1)) === substr($compact, -1) ? null : ValidationError::Checksum);
     }
 
     public function format(string $number): string

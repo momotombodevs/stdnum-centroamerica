@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace StdNumCentroamerica\Tests\CostaRica;
 
 use StdNumCentroamerica\Contracts\DocumentInterface;
