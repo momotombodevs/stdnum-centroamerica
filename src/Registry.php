@@ -12,6 +12,7 @@ use StdNumCentroamerica\Documents\CostaRica;
 use StdNumCentroamerica\Documents\ElSalvador;
 use StdNumCentroamerica\Documents\Guatemala;
 use StdNumCentroamerica\Documents\Honduras;
+use StdNumCentroamerica\Documents\Mrz;
 use StdNumCentroamerica\Documents\Nicaragua;
 use StdNumCentroamerica\Documents\Panama;
 
@@ -120,6 +121,9 @@ class Registry
             new DocumentInfo('cr.nite', CostaRica\Nite::class, 'CR', 'NITE', Level::Format),
             new DocumentInfo('pa.cedula', Panama\Cedula::class, 'PA', 'Cédula', Level::Format),
             new DocumentInfo('pa.ruc', Panama\Ruc::class, 'PA', 'RUC', Level::Format),
+            new DocumentInfo('mrz.td3', Mrz\Td3::class, 'ICAO', 'MRZ de pasaporte (TD3)', Level::Complete),
+            new DocumentInfo('mrz.td1', Mrz\Td1::class, 'ICAO', 'MRZ de cédula (TD1)', Level::Complete),
+            new DocumentInfo('mrz.td2', Mrz\Td2::class, 'ICAO', 'MRZ de identidad (TD2)', Level::Complete),
         );
     }
 

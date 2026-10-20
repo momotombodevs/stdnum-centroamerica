@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use StdNumCentroamerica\Contracts\ParsesNumbers;
 use StdNumCentroamerica\Documents\Guatemala\DpiData;
 use StdNumCentroamerica\Documents\Honduras\IdentidadData;
+use StdNumCentroamerica\Documents\Mrz\MrzData;
 use StdNumCentroamerica\Documents\Nicaragua\Cedula as NiCedula;
 use StdNumCentroamerica\Documents\Nicaragua\CedulaData as NiCedulaData;
 use StdNumCentroamerica\Documents\Panama\CedulaData as PaCedulaData;
@@ -137,6 +138,16 @@ class ParseTest extends TestCase
 
         $suffix = Registry::parse('pa.cedula', '3-PI-12-345');
         $this->assertEquals(new PaCedulaData(CedulaKind::Birth, 3, 'PI', '12', '345'), $suffix);
+    }
+
+    public function test_mrz_de_pasaporte(): void
+    {
+        $data = Registry::parse('mrz.td3', "P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<\nL898902C36UTO7408122F1204159ZE184226B<<<<<10");
+
+        $this->assertInstanceOf(MrzData::class, $data);
+        $this->assertSame('ERIKSSON', $data->surname);
+        $this->assertSame('L898902C3', $data->documentNumber);
+        $this->assertNull(Registry::parse('mrz.td3', 'P<UTO'));
     }
 
     public function test_un_numero_invalido_devuelve_null(): void
