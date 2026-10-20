@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace StdNumCentroamerica\Documents\Panama;
 
 use StdNumCentroamerica\Contracts\GeneratesNumbers;
+use StdNumCentroamerica\Contracts\ParsesNumbers;
 use StdNumCentroamerica\Documents\AbstractDocument;
 
 /**
@@ -23,8 +24,10 @@ use StdNumCentroamerica\Documents\AbstractDocument;
  * No oficial (fuentes de terceros): las claves 10-13 (comarcas y Panamá Oeste) y los
  * sufijos PI (indígena) y AV (anterior al Registro Civil) entre la provincia y el
  * tomo. Longitudes de tomo y asiento (1-6 dígitos): permisivas.
+ *
+ * @implements ParsesNumbers<CedulaData>
  */
-class Cedula extends AbstractDocument implements GeneratesNumbers
+class Cedula extends AbstractDocument implements GeneratesNumbers, ParsesNumbers
 {
     private const PROVINCE = '(?:1[0-3]|[1-9])';
 
@@ -49,6 +52,25 @@ class Cedula extends AbstractDocument implements GeneratesNumbers
     public function generate(): string
     {
         return random_int(1, 9) . '-' . random_int(1, 999) . '-' . random_int(1, 99999);
+    }
+
+    public function parse(string $number): ?CedulaData
+    {
+        $normalized = $this->validated($number);
+        if ($normalized === null) {
+            return null;
+        }
+
+        $parts = explode('-', $normalized);
+
+        return match ($parts[0]) {
+            'PE' => new CedulaData(CedulaKind::BornAbroad, volume: $parts[1], entry: $parts[2]),
+            'N' => new CedulaData(CedulaKind::Naturalized, volume: $parts[1], entry: $parts[2]),
+            'E' => new CedulaData(CedulaKind::ForeignResident, provinceCode: (int) $parts[1], entry: $parts[2]),
+            default => count($parts) === 4
+                ? new CedulaData(CedulaKind::Birth, (int) $parts[0], $parts[1], $parts[2], $parts[3])
+                : new CedulaData(CedulaKind::Birth, (int) $parts[0], volume: $parts[1], entry: $parts[2]),
+        };
     }
 
     public function format(string $number): string

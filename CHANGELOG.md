@@ -3,8 +3,9 @@
 ## [Unreleased]
 
 ### Agregado
-- MRZ de ICAO Doc 9303: `mrz.td3` (pasaporte, 2×44), `mrz.td1` (cédula, 3×30) y `mrz.td2` (identidad, 2×36). Validan formato, componentes (tipo, sexo, fechas, caracteres) y los dígitos de control del número, nacimiento, vencimiento, datos opcionales y compuesto; aceptan la MRZ con o sin saltos de línea. `parse()` devuelve un `MrzData` con los campos. Verifican también el dígito propio de los números de documento de más de nueve caracteres en TD1 y TD2.
+- MRZ de ICAO Doc 9303: `mrz.td3` (pasaporte, 2×44), `mrz.td1` (cédula, 3×30) y `mrz.td2` (identidad, 2×36). Validan formato, componentes (tipo, sexo, fechas, caracteres) y los dígitos de control del número, nacimiento, vencimiento, datos opcionales y compuesto; aceptan la MRZ con o sin saltos de línea. `Registry::parse()` devuelve un `MrzData` con los campos. Verifican también el dígito propio de los números de documento de más de nueve caracteres en TD1 y TD2.
 - `DocumentInfo::$country` admite `ICAO` para los estándares internacionales.
+- `Registry::parse()` y la interfaz `ParsesNumbers`: leen los componentes de `ni.cedula` (municipio, fecha de nacimiento con `birthYearCandidates()`), `hn.identidad` (departamento, municipio, año de inscripción, códigos especiales), `gt.dpi` (número de registro, departamento, municipio) y `pa.cedula` (tipo, provincia, tomo, asiento).
 
 ## [0.2.0] - 2026-10-20
 

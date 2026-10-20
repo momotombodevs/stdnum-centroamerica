@@ -68,14 +68,29 @@ Cedula::checkLetter('0010101900001'); // "N"
 ```
 
 ```php
-use StdNumCentroamerica\Documents\Mrz\Td3;
-
 $mrz = "P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<\nL898902C36UTO7408122F1204159ZE184226B<<<<<10";
 Registry::isValid('mrz.td3', $mrz);       // true
-(new Td3())->parse($mrz)?->surname;       // "ERIKSSON"
+Registry::parse('mrz.td3', $mrz)?->surname;  // "ERIKSSON"
 ```
 
 `Registry::describe()` devuelve el país, el nombre y el alcance (`Level::Complete` o `Level::Format`) de cada documento incluido.
+
+`Registry::parse($clave, $número)` lee los componentes que el número ya trae: devuelve un objeto de solo lectura, o `null` si el número no es válido. Está disponible en `ni.cedula`, `hn.identidad`, `gt.dpi`, `pa.cedula` y las tres MRZ (`mrz.td1`, `mrz.td2`, `mrz.td3`); en los demás lanza `InvalidArgumentException`.
+
+```php
+$cedula = Registry::parse('ni.cedula', '001-010190-0001N');
+$cedula->municipalityCode;        // 1
+$cedula->birthDay;                // 1
+$cedula->birthMonth;              // 1
+$cedula->birthYearTwoDigits;      // 90
+$cedula->birthYearCandidates();   // [1990]: el número no dice el siglo, así que se ofrecen los años posibles (puede quedar vacío: el 29/02/01 no existe)
+
+Registry::parse('hn.identidad', '0906-1990-00001')->municipalityCode; // 6
+Registry::parse('gt.dpi', '1234 56789 0101')->departmentCode;          // 1
+Registry::parse('pa.cedula', 'PE-5-687')->kind;                        // CedulaKind::BornAbroad
+```
+
+En Nicaragua, el municipio y la letra de control son de terceros (el CSE no los publica) y el código 888 tiene una sola fuente; en Panamá, las provincias 10 a 13 y los sufijos PI y AV tampoco son oficiales (ver [docs/fuentes.md](docs/fuentes.md)). Solo se leen códigos, no nombres: las tablas de municipios completas y respaldadas por una fuente oficial aún no están. Los componentes salen de la estructura del número y no se contrastan con ningún registro, y la fecha de nacimiento es un dato personal: trátela como tal.
 
 `Registry::generate($clave)` produce un número sintético válido, útil para fixtures y datos de ejemplo (es aleatorio: puede coincidir por azar con un número real, así que no lo use como dato de personas):
 
@@ -112,7 +127,7 @@ Una clave desconocida lanza `InvalidArgumentException`. `Registry::keys()` lista
 
 Notas:
 
-- Las **MRZ** (zona de lectura mecánica de pasaportes y cédulas) se reciben con o sin saltos de línea. `parse()` devuelve los datos de una MRZ válida; las fechas quedan en `AAMMDD`, porque el siglo no se puede inferir. No se valida el número de pasaporte de cada país, solo la MRZ, que es un estándar público. El paquete valida pero no guarda ni registra nada.
+- Las **MRZ** (zona de lectura mecánica de pasaportes y cédulas) se reciben con o sin saltos de línea. `Registry::parse()` devuelve los datos de una MRZ válida; las fechas quedan en `AAMMDD`, porque el siglo no se puede inferir. No se valida el número de pasaporte de cada país, solo la MRZ, que es un estándar público. El paquete valida pero no guarda ni registra nada.
 
 - En **Panamá** tomo y asiento tienen longitud variable, así que el número solo se interpreta con guiones. Use `format()` para la forma canónica (`8-926-1601`); `compact()` quita los guiones.
 - En **Honduras**, `hn.identidad` acepta los códigos especiales de naturalizados (`0890`) y doble nacionalidad (`0880`).

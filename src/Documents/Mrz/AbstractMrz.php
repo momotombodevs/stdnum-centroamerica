@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace StdNumCentroamerica\Documents\Mrz;
 
 use StdNumCentroamerica\Contracts\GeneratesNumbers;
+use StdNumCentroamerica\Contracts\ParsesNumbers;
 use StdNumCentroamerica\Documents\AbstractDocument;
 use StdNumCentroamerica\ValidationError;
 
@@ -17,8 +18,10 @@ use StdNumCentroamerica\ValidationError;
  * emisor, nacionalidad y nombre) y los dígitos de control del número de documento,
  * nacimiento, vencimiento, datos opcionales (TD3) y el compuesto. Una fecha
  * desconocida (`<<<<<<`) lleva `<` o `0` como dígito.
+ *
+ * @implements ParsesNumbers<MrzData>
  */
-abstract class AbstractMrz extends AbstractDocument implements GeneratesNumbers
+abstract class AbstractMrz extends AbstractDocument implements GeneratesNumbers, ParsesNumbers
 {
     /** Sin I ni O, que se confunden con 1 y 0. */
     private const NUMBER_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
@@ -66,8 +69,8 @@ abstract class AbstractMrz extends AbstractDocument implements GeneratesNumbers
      */
     public function parse(string $mrz): ?MrzData
     {
-        $compact = $this->compact($mrz);
-        if ($this->check($compact) !== null) {
+        $compact = $this->validated($mrz);
+        if ($compact === null) {
             return null;
         }
 
