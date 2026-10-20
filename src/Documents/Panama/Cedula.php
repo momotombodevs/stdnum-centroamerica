@@ -37,7 +37,7 @@ class Cedula extends AbstractDocument
     /** Mayúsculas, con un solo guion entre grupos. */
     public static function normalize(string $number): string
     {
-        return strtoupper(preg_replace('/[\s-]+/', '-', trim($number)));
+        return strtoupper(preg_replace('/[\s-]+/', '-', trim($number)) ?? '');
     }
 
     public function isValid(string $number): bool

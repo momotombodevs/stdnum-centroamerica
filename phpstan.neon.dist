@@ -1,0 +1,10 @@
+parameters:
+    level: 8
+    paths:
+        - src
+        - tests
+    ignoreErrors:
+        # Los proveedores de datos de las pruebas devuelven listas literales.
+        -
+            identifier: missingType.iterableValue
+            path: tests

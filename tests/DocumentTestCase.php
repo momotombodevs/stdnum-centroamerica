@@ -18,7 +18,7 @@ abstract class DocumentTestCase extends TestCase
     /** @return array<int|string, array{string}> */
     abstract public static function invalidos(): array;
 
-    /** @return array<string, string> número de entrada => formato esperado */
+    /** @return array<int|string, string> número de entrada => formato esperado */
     abstract public static function formatos(): array;
 
     #[DataProvider('validos')]

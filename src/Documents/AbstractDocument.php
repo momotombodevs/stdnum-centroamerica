@@ -18,7 +18,7 @@ abstract class AbstractDocument implements DocumentInterface
 
     public function compact(string $number): string
     {
-        return strtoupper(preg_replace('/[\s\-]/', '', $number));
+        return strtoupper(str_replace([' ', "\t", "\n", "\r", "\f", "\v", '-'], '', $number));
     }
 
     /** Sin agrupación propia, el formato es el número compacto. */
