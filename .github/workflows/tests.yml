@@ -32,3 +32,22 @@ jobs:
       - run: composer install --no-interaction --prefer-dist
       - run: composer cs
       - run: composer analyse
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: pcov
+      - run: composer install --no-interaction --prefer-dist
+      - run: composer coverage
+      - name: Require at least 90% line coverage
+        run: |
+          php -r '
+            $m = simplexml_load_file("build/coverage.xml")->project->metrics;
+            $pct = 100 * (int) $m["coveredstatements"] / max(1, (int) $m["statements"]);
+            printf("Line coverage: %.1f%%\n", $pct);
+            exit($pct >= 90 ? 0 : 1);
+          '
