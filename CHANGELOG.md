@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-20
+
+> Cambio incompatible: `DocumentInterface` exige `validate()`.
+
 ### Agregado
 - `validate()` en `DocumentInterface`, `AbstractDocument` y `Registry`: devuelve un `ValidationResult` con el `ValidationError` (`Format`, `Component` o `Checksum`) que explica el fallo. `isValid()` queda como atajo.
 - PHPStan (nivel 8) y PHP-CS-Fixer (PSR-12) con los scripts `composer analyse`, `cs`, `cs:fix` y `ci`; job `quality` en CI, que ahora también corre en `develop` y `release/**`.
