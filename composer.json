@@ -53,7 +53,11 @@
             "@analyse",
             "@test"
         ],
-        "coverage": "phpunit --coverage-text --coverage-clover=build/coverage.xml"
+        "coverage": [
+            "phpunit --coverage-text --coverage-clover=build/coverage.xml",
+            "@coverage:check"
+        ],
+        "coverage:check": "php tools/check-coverage.php build/coverage.xml 90"
     },
     "config": {
         "sort-packages": true

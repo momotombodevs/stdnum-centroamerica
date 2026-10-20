@@ -50,17 +50,21 @@ class RegistryTest extends TestCase
 
     public function test_describe_coincide_con_la_tabla_del_readme(): void
     {
+        $countries = [
+            'GT' => 'Guatemala', 'SV' => 'El Salvador', 'HN' => 'Honduras',
+            'NI' => 'Nicaragua', 'CR' => 'Costa Rica', 'PA' => 'Panamá',
+        ];
         $readme = (string) file_get_contents(__DIR__ . '/../README.md');
-        preg_match_all('/^\|[^|]+\|[^|]+\| `([a-z]{2}\.[a-z_]+)` \| (completa|formato)/m', $readme, $rows, PREG_SET_ORDER);
+        preg_match_all('/^\| ([^|]+) \| ([^|]+) \| `([a-z]{2}\.[a-z_]+)` \| (completa|formato)/m', $readme, $rows, PREG_SET_ORDER);
 
         $expected = [];
-        foreach ($rows as [, $key, $level]) {
-            $expected[$key] = $level === 'completa' ? Level::Complete : Level::Format;
+        foreach ($rows as [, $country, $name, $key, $level]) {
+            $expected[$key] = [$country, $name, $level === 'completa' ? Level::Complete : Level::Format];
         }
 
         $actual = [];
         foreach (Registry::describe() as $info) {
-            $actual[$info->key] = $info->level;
+            $actual[$info->key] = [$countries[$info->country], $info->name, $info->level];
         }
 
         $this->assertSame($expected, $actual);

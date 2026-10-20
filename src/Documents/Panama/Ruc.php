@@ -7,7 +7,6 @@ namespace StdNumCentroamerica\Documents\Panama;
 use StdNumCentroamerica\Contracts\GeneratesNumbers;
 use StdNumCentroamerica\Documents\AbstractDocument;
 use StdNumCentroamerica\ValidationError;
-use StdNumCentroamerica\ValidationResult;
 
 /**
  * RUC (DGI). Nivel: formato, sin el dígito verificador.
@@ -34,21 +33,25 @@ class Ruc extends AbstractDocument implements GeneratesNumbers
         '/^\d{1,10}-\d{1,6}-\d{1,8}$/',
     ];
 
-    public function validate(string $number): ValidationResult
+    protected function prepare(string $number): string
     {
-        $normalized = Cedula::normalize($number);
+        return Cedula::normalize($number);
+    }
 
-        if (strlen($normalized) >= 5 && strlen($normalized) <= 21) {
+    protected function check(string $compact): ?ValidationError
+    {
+        if (strlen($compact) >= 5 && strlen($compact) <= 21) {
             foreach ([Cedula::PATTERN, ...self::OTHER_FORMS] as $pattern) {
-                if (preg_match($pattern, $normalized) === 1) {
-                    return new ValidationResult();
+                if (preg_match($pattern, $compact) === 1) {
+                    return null;
                 }
             }
         }
 
-        return new ValidationResult(ValidationError::Format);
+        return ValidationError::Format;
     }
 
+    /** Una cédula es un RUC válido (persona natural). */
     public function generate(): string
     {
         return (new Cedula())->generate();

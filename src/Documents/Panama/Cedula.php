@@ -6,8 +6,6 @@ namespace StdNumCentroamerica\Documents\Panama;
 
 use StdNumCentroamerica\Contracts\GeneratesNumbers;
 use StdNumCentroamerica\Documents\AbstractDocument;
-use StdNumCentroamerica\ValidationError;
-use StdNumCentroamerica\ValidationResult;
 
 /**
  * Cédula de identidad personal (Tribunal Electoral). Nivel: formato; no tiene dígito
@@ -43,11 +41,9 @@ class Cedula extends AbstractDocument implements GeneratesNumbers
         return strtoupper(preg_replace('/[\s-]+/', '-', trim($number)) ?? '');
     }
 
-    public function validate(string $number): ValidationResult
+    protected function prepare(string $number): string
     {
-        return new ValidationResult(
-            preg_match(self::PATTERN, self::normalize($number)) === 1 ? null : ValidationError::Format,
-        );
+        return self::normalize($number);
     }
 
     public function generate(): string
