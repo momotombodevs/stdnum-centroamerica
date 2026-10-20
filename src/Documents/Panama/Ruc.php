@@ -41,12 +41,12 @@ class Ruc extends AbstractDocument implements GeneratesNumbers
         if (strlen($normalized) >= 5 && strlen($normalized) <= 21) {
             foreach ([Cedula::PATTERN, ...self::OTHER_FORMS] as $pattern) {
                 if (preg_match($pattern, $normalized) === 1) {
-                    return ValidationResult::ok();
+                    return new ValidationResult();
                 }
             }
         }
 
-        return ValidationResult::fail(ValidationError::Format);
+        return new ValidationResult(ValidationError::Format);
     }
 
     public function generate(): string

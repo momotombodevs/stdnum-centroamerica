@@ -13,26 +13,26 @@ class Dui extends AbstractDocument implements GeneratesNumbers
 {
     protected const PATTERN = '/^\d{9}$/';
 
-    protected function check(string $compact): ?ValidationError
+    protected function checkContent(string $compact): ?ValidationError
     {
-        if ($error = parent::check($compact)) {
-            return $error;
-        }
-
-        $sum = self::weightedSum($compact, range(9, 2));
-
-        return (10 - $sum % 10) % 10 === (int) $compact[8] ? null : ValidationError::Checksum;
+        return self::checkDigit($compact) === (int) $compact[8] ? null : ValidationError::Checksum;
     }
 
     public function generate(): string
     {
         $body = self::randomDigits(8);
 
-        return $body . (10 - self::weightedSum($body, range(9, 2)) % 10) % 10;
+        return $body . self::checkDigit($body);
     }
 
     public function format(string $number): string
     {
         return $this->group($number, [8, 1]);
+    }
+
+    /** Verificador de los 8 primeros dígitos. */
+    private static function checkDigit(string $digits): int
+    {
+        return (10 - self::weightedSum($digits, range(9, 2)) % 10) % 10;
     }
 }

@@ -16,7 +16,11 @@ use StdNumCentroamerica\Documents\Panama;
 
 class Registry
 {
-    /** Clave => [clase, país ISO 3166-1, nombre, alcance de la validación]. */
+    /**
+     * Clave => [clase, país ISO 3166-1, nombre, alcance de la validación].
+     *
+     * @var array<string, array{class-string<DocumentInterface>, string, string, Level}>
+     */
     private const DOCUMENTS = [
         'gt.nit' => [Guatemala\Nit::class, 'GT', 'NIT', Level::Complete],
         'gt.dpi' => [Guatemala\Dpi::class, 'GT', 'DPI (CUI)', Level::Complete],

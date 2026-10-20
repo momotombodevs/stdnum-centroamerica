@@ -45,7 +45,7 @@ class Cedula extends AbstractDocument implements GeneratesNumbers
 
     public function validate(string $number): ValidationResult
     {
-        return ValidationResult::from(
+        return new ValidationResult(
             preg_match(self::PATTERN, self::normalize($number)) === 1 ? null : ValidationError::Format,
         );
     }

@@ -13,7 +13,7 @@
 
 ### Cambiado
 - Todos los archivos declaran `strict_types=1`.
-- Las clases con reglas propias implementan `check()` en lugar de sobrescribir `isValid()`. Las clases propias registradas con `Registry::register()` deben implementar `validate()`, que `AbstractDocument` ya provee.
+- Las clases con reglas propias implementan `checkContent()` (o `check()`) en lugar de sobrescribir `isValid()`. Las clases propias registradas con `Registry::register()` deben implementar `validate()`, que `AbstractDocument` ya provee.
 - `compact()` usa `str_replace`, que nunca devuelve `null`.
 
 ## [0.1.1] - 2026-10-19

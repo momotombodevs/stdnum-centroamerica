@@ -56,7 +56,7 @@ class GenerateTest extends TestCase
 
             public function validate(string $number): ValidationResult
             {
-                return ValidationResult::ok();
+                return new ValidationResult();
             }
 
             public function format(string $number): string

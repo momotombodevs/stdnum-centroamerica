@@ -18,10 +18,9 @@ class Nit extends AbstractDocument implements GeneratesNumbers
 {
     protected const PATTERN = '/^\d{1,11}[0-9K]$/';
 
-    protected function check(string $compact): ?ValidationError
+    protected function checkContent(string $compact): ?ValidationError
     {
-        return parent::check($compact)
-            ?? (self::checkDigit(substr($compact, 0, -1)) === substr($compact, -1) ? null : ValidationError::Checksum);
+        return self::checkDigit(substr($compact, 0, -1)) === substr($compact, -1) ? null : ValidationError::Checksum;
     }
 
     public function generate(): string

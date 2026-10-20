@@ -20,13 +20,22 @@ abstract class AbstractDocument implements DocumentInterface
 
     public function validate(string $number): ValidationResult
     {
-        return ValidationResult::from($this->check($this->compact($number)));
+        return new ValidationResult($this->check($this->compact($number)));
     }
 
-    /** Primer error de un número compacto, o null si es válido; por defecto solo comprueba PATTERN. */
+    /**
+     * Primer error de un número compacto, o null si es válido. Por defecto exige PATTERN y
+     * luego las reglas de {@see checkContent()}; los documentos sin PATTERN lo sobrescriben.
+     */
     protected function check(string $compact): ?ValidationError
     {
-        return preg_match(static::PATTERN, $compact) === 1 ? null : ValidationError::Format;
+        return preg_match(static::PATTERN, $compact) === 1 ? $this->checkContent($compact) : ValidationError::Format;
+    }
+
+    /** Reglas adicionales (componentes, verificador) de un número que ya cumple PATTERN. */
+    protected function checkContent(string $compact): ?ValidationError
+    {
+        return null;
     }
 
     public function compact(string $number): string

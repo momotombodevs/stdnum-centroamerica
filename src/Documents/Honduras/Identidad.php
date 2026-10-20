@@ -22,12 +22,8 @@ class Identidad extends AbstractDocument implements GeneratesNumbers
 {
     protected const PATTERN = '/^\d{13}$/';
 
-    protected function check(string $compact): ?ValidationError
+    protected function checkContent(string $compact): ?ValidationError
     {
-        if ($error = parent::check($compact)) {
-            return $error;
-        }
-
         $year = (int) substr($compact, 4, 4);
         if ($year < 1800 || $year > (int) date('Y')) {
             return ValidationError::Component;
