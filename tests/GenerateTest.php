@@ -48,7 +48,7 @@ class GenerateTest extends TestCase
 
     public function test_documento_sin_generador_lanza_excepcion(): void
     {
-        Registry::register('xx.sin_generador', new class () implements DocumentInterface {
+        $document = new class () implements DocumentInterface {
             public function isValid(string $number): bool
             {
                 return true;
@@ -68,7 +68,8 @@ class GenerateTest extends TestCase
             {
                 return $number;
             }
-        }::class);
+        };
+        Registry::register('xx.sin_generador', $document::class);
 
         $this->expectException(InvalidArgumentException::class);
         Registry::generate('xx.sin_generador');
