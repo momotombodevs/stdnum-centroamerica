@@ -1,0 +1,70 @@
+<?php
+
+namespace StdNumCentroamerica\Documents;
+
+use StdNumCentroamerica\Contracts\DocumentInterface;
+
+abstract class AbstractDocument implements DocumentInterface
+{
+    /** Expresión que debe cumplir el número compacto; la usa el isValid() por defecto. */
+    protected const PATTERN = '';
+
+    public function isValid(string $number): bool
+    {
+        return preg_match(static::PATTERN, $this->compact($number)) === 1;
+    }
+
+    public function compact(string $number): string
+    {
+        return strtoupper(preg_replace('/[\s\-]/', '', $number));
+    }
+
+    /** Sin agrupación propia, el formato es el número compacto. */
+    public function format(string $number): string
+    {
+        return $this->compact($number);
+    }
+
+    /**
+     * Agrupa el número compacto según los tamaños dados; si la longitud no coincide,
+     * devuelve el número compacto sin cambios.
+     *
+     * @param int[] $sizes
+     */
+    protected function group(string $number, array $sizes, string $separator = '-'): string
+    {
+        $compact = $this->compact($number);
+
+        if (strlen($compact) !== array_sum($sizes)) {
+            return $compact;
+        }
+
+        $parts = [];
+        $offset = 0;
+        foreach ($sizes as $size) {
+            $parts[] = substr($compact, $offset, $size);
+            $offset += $size;
+        }
+
+        return implode($separator, $parts);
+    }
+
+    /** Separa con un guion el último carácter (verificador) del resto. */
+    protected function groupLast(string $number): string
+    {
+        $compact = $this->compact($number);
+
+        return strlen($compact) < 2 ? $compact : substr($compact, 0, -1) . '-' . substr($compact, -1);
+    }
+
+    /** @param int[] $weights un peso por dígito, de izquierda a derecha */
+    protected static function weightedSum(string $digits, array $weights): int
+    {
+        $sum = 0;
+        foreach ($weights as $i => $weight) {
+            $sum += (int) $digits[$i] * $weight;
+        }
+
+        return $sum;
+    }
+}

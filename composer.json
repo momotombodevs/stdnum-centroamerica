@@ -1,0 +1,47 @@
+{
+    "name": "momotombo/stdnum-centroamerica",
+    "description": "Validación de documentos de identidad y fiscales para Centroamérica",
+    "type": "library",
+    "keywords": [
+        "stdnum",
+        "centroamerica",
+        "validacion",
+        "nit",
+        "dui",
+        "dpi",
+        "cedula",
+        "ruc",
+        "guatemala",
+        "el-salvador",
+        "honduras",
+        "nicaragua",
+        "costa-rica",
+        "panama"
+    ],
+    "homepage": "https://github.com/momotombodevs/stdnum-centroamerica",
+    "license": "MIT",
+    "support": {
+        "issues": "https://github.com/momotombodevs/stdnum-centroamerica/issues",
+        "source": "https://github.com/momotombodevs/stdnum-centroamerica"
+    },
+    "require": {
+        "php": ">=8.1",
+        "ext-ctype": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "StdNumCentroamerica\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "StdNumCentroamerica\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
+}

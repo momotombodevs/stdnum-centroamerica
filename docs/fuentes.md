@@ -1,0 +1,32 @@
+# Fuentes y verificación
+
+Todas las consultas se hicieron el 2026-10-19. "Oficial" = documento de la institución o esquema que ella publica; "abierta" = implementaciones de código abierto, sin regla publicada por la institución. Ninguna regla de dígito verificador está publicada oficialmente.
+
+| Clave | Qué respalda la regla | Fuente |
+|-------|----------------------|--------|
+| `gt.dpi` | Estructura de 13 dígitos, con el departamento antes del municipio: oficial. Fórmula del verificador (pesos 2..9, módulo 11): abierta. | [RENAP, ¿Qué es el CUI?](https://www.renap.gob.gt/noticias/que-es-el-cui); [cui-gt](https://github.com/aalonzolu/cui-gt) |
+| `gt.nit` | Desde 2023-10-04 el NIT nuevo son los primeros 9 dígitos del CUI: oficial. Fórmula (módulo 11, K): abierta; con cuerpo de 8 dígitos coincide con la del CUI. | [SAT](https://portal.sat.gob.gt/portal/noticias/que-significa-para-el-guatemalteco-la-armonizacion-del-cui-con-el-nit/); [nitv](https://github.com/bronzdoc/nitv) |
+| `sv.dui` | Formato `00000000-0`: esquema DTE oficial. Fórmula (pesos 9..2, módulo 10): abierta; la regla no la publica el RNPN. | [gist gmelendezcr](https://gist.github.com/gmelendezcr/3609421); [idsv-php](https://github.com/avalon-tech/idsv-php) |
+| `sv.nit` | 14 dígitos, o 9 (el DUI): esquemas DTE oficiales y guía de integración. Verificador: abierta (idsv-php); los tres NIT de muestra de la guía oficial lo cumplen. | [DGII, guía de integración DTE](https://factura.gob.sv/wp-content/uploads/2021/11/FESVDGIIMH_GuiaIntegracionFacturaElectronicasSV.pdf); [esquemas DTE (espejo)](https://github.com/herson/dte-json-schemas); [idsv-php](https://github.com/avalon-tech/idsv-php) |
+| `sv.nrc` | 1 a 8 dígitos sin guiones (`^[0-9]{1,8}$`): esquemas DTE. | [esquemas DTE (espejo)](https://github.com/herson/dte-json-schemas) |
+| `hn.identidad` | Estructura (departamento, municipio, **año de inscripción**, correlativo) y códigos especiales 0880 (doble nacionalidad) y 0890 (naturalizados): oficial. Los 18 departamentos y 298 municipios coinciden con las listas de cada departamento y la numeración de los tomos municipales del INE. | [Ley del RNP arts. 99-100](https://pdba.georgetown.edu/Electoral/Honduras/Leyes/Decreto2062-2004.pdf); [Reglamento arts. 150 y 153](https://www.tsc.gob.hn/web/leyes/REGLAMENTO-LEY-RNP.pdf); [INE, Censo 2013](https://ine.gob.hn/censo-de-poblacion-y-vivienda-2013/) |
+| `hn.rtn` | 14 dígitos; en personas naturales es la identidad + 1 dígito: oficial. | [SAR](https://www.sar.gob.hn/faqs/) |
+| `ni.cedula` | Estructura de 13 cifras (municipio 3, fecha 6, progresivo 4): oficial, sin mención de la letra. Letra (módulo 23): cuatro implementaciones abiertas y una cédula de muestra con MRZ consistente coinciden; el CSE no la publica y el ejemplo `0013007660022M` del aviso DGI no la cumple (se considera ilustrativo). Códigos de municipio: lista de terceros; 149 de 152 son consistentes con la división oficial de INIDE, falta Mulukukú y hay dos mal ubicados. Código 888 (nacidos en el extranjero): una sola fuente, sin norma. | [Ley 152 consolidada, art. 31](https://www.leybook.com/doc/28080); [gist](https://gist.github.com/Crdzbird/b468270302e84e6434989ed875a8edb2); [valida-Cedula-nicaragua](https://github.com/berroteran/valida-Cedula-nicaragua); [cedula-nicaragua-validator](https://github.com/bnorvinjosue/cedula-nicaragua-validator); [INIDE, 153 municipios](https://www.inide.gob.ni/docu/Emnv09/BoletaPDF/CaratulaDPA.pdf) |
+| `ni.ruc` | 14 caracteres; J, N, R, E o cédula; no puede iniciar con cuatro ceros: oficial. | [DGI, AVISO/072/05-2022](https://www.dgi.gob.ni/pdfNoticia/1715); [DGI, FAQ](https://www.dgi.gob.ni/FAQ/welcome_topic.htm) |
+| `pa.cedula` | Formas P-tomo-asiento, PE-, N- y E-provincia-orden: Decreto 53 de 1958, art. 9, citado por el Tribunal Electoral (su página bloquea la descarga automática y se leyó en un resumen de búsqueda). Provincias 1-9: orden alfabético, coincide en todas las fuentes. Claves 10-13 y sufijos PI / AV: solo terceros. Longitudes de tomo y asiento: permisivas. | [Tribunal Electoral](https://www.tribunal-electoral.gob.pa/direccion-nacional-de-cedulacion/la-cedula/); [panama50, prefijos](https://panama50.com/prefijo-de-cedula-segun-provincia-en-panama/); [panama50, letras](https://panama50.com/significado-letras-cedulas-panamenas/) |
+| `pa.ruc` | Alfanumérico de 5 a 21 posiciones con letras y guiones; ejemplos `8-NT-000-00`, `PE-4-000-000`, `00023824-0930-212623`: oficial. DV de 2 dígitos asignado por el sistema, sin fórmula publicada: no se valida. Longitud por grupo y forma del NT: inferidas de esos ejemplos. | [DGI, ficha técnica de factura electrónica](https://dgi.mef.gob.pa/_7facturaelectronica/source/F-T%C3%A9cnica%20de%20Factura%20Electr%C3%B3nica%20para%20los%20Proveedores%20de%20Autorizaci%C3%B3n%20Calificados%20V1.00-Abril2025.pdf); [DGI, Dígito Verificador](https://dgi.mef.gob.pa/DV) |
+| `cr.*` | Cédula física 9 dígitos sin cero inicial; jurídica 10 dígitos; DIMEX 11 o 12 sin cero inicial; NITE 10: oficial. | [Hacienda, Anexos y estructuras v4.4](https://atv.hacienda.go.cr/ATV/ComprobanteElectronico/docs/esquemas/2024/v4.4/ANEXOS%20Y%20ESTRUCTURAS_V4.4.pdf) |
+
+Los números de las pruebas son sintéticos o ejemplos de muestra publicados en documentos oficiales, no números de personas reales.
+
+## Por confirmar con cada institución
+
+- Contrastar con cada institución las fórmulas de `gt.dpi`, `gt.nit`, `sv.dui` y `sv.nit`, y la letra de `ni.cedula`.
+- Nicaragua: tabla oficial de códigos de municipio del CSE (incluye Mulukukú, creado en 2005 por la Ley 503) y el código 888.
+- Panamá: confirmar con el Tribunal Electoral las claves 10-13 y los sufijos PI y AV; pedir a la DGI la fórmula del DV.
+
+## Decisiones
+
+- Costa Rica: los validadores se escribieron de nuevo, sin reutilizar `gbielbarbosa/stdnum-php`.
+- Las opciones `strictLetter` y `strictMunicipality` de la cédula nicaragüense existen porque la letra y la tabla de municipios no son oficiales; la tabla es incompleta y su modo estricto puede rechazar cédulas válidas.
+

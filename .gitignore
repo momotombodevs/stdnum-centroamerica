@@ -1,0 +1,6 @@
+.DS_Store
+vendor/
+.phpunit.result.cache
+.remember/
+composer.lock
+plan-stdnum-centroamerica.md

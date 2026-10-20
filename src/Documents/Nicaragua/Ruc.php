@@ -1,0 +1,34 @@
+<?php
+
+namespace StdNumCentroamerica\Documents\Nicaragua;
+
+use StdNumCentroamerica\Documents\AbstractDocument;
+
+/**
+ * RUC (DGI), 14 caracteres: personas jurídicas J + 13 dígitos; nacionales sin cédula
+ * N, residentes extranjeros R, no residentes E (+ 13 dígitos); nacionales con cédula
+ * usan el número de cédula. Los que inician con cuatro ceros no son válidos.
+ * Fuente: DGI, AVISO/072/05-2022 (Disposición Administrativa General 01-2013).
+ * Nivel: formato.
+ */
+class Ruc extends AbstractDocument
+{
+    public function __construct(private readonly Cedula $cedula = new Cedula())
+    {
+    }
+
+    public function isValid(string $number): bool
+    {
+        $compact = $this->compact($number);
+
+        return !str_starts_with($compact, '0000')
+            && (preg_match('/^[JNRE]\d{13}$/', $compact) === 1 || $this->cedula->isValid($compact));
+    }
+
+    public function format(string $number): string
+    {
+        $compact = $this->compact($number);
+
+        return preg_match('/^[JNRE]/', $compact) === 1 ? $compact : $this->cedula->format($compact);
+    }
+}
