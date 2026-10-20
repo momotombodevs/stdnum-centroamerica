@@ -12,6 +12,9 @@ use StdNumCentroamerica\Registry;
 class ChecksumTest extends TestCase
 {
     private const DIGITS = '0123456789';
+    private const TD3 = 'P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<L898902C36UTO7408122F1204159ZE184226B<<<<<10';
+    private const TD1 = 'I<UTOD231458907<<<<<<<<<<<<<<<7408122F1204159UTO<<<<<<<<<<<6ERIKSSON<<ANNA<MARIA<<<<<<<<<<';
+    private const TD2 = 'I<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<D231458907UTO7408122F1204159<<<<<<<6';
 
     /**
      * El módulo 11 detecta cualquier cambio de un solo dígito (11 es primo y los pesos
@@ -29,6 +32,12 @@ class ChecksumTest extends TestCase
             'sv.dui, verificador' => ['sv.dui', '123456784', [8], self::DIGITS],
             'sv.nit, verificador' => ['sv.nit', '06141303861364', [13], self::DIGITS],
             'sv.nit antiguo, verificador' => ['sv.nit', '07162002610014', [13], self::DIGITS],
+            // MRZ de ICAO (compactas): dígitos de nacimiento, vencimiento y los de control propios.
+            'mrz.td3, nacimiento' => ['mrz.td3', self::TD3, [57, 58, 59, 60, 61, 62, 63], self::DIGITS],
+            'mrz.td3, vencimiento' => ['mrz.td3', self::TD3, [65, 66, 67, 68, 69, 70, 71], self::DIGITS],
+            'mrz.td3, dígitos de control' => ['mrz.td3', self::TD3, [53, 63, 71, 86, 87], self::DIGITS],
+            'mrz.td1, nacimiento y vencimiento' => ['mrz.td1', self::TD1, [30, 31, 32, 33, 34, 35, 36, 38, 39, 40, 41, 42, 43, 44, 59], self::DIGITS],
+            'mrz.td2, nacimiento y vencimiento' => ['mrz.td2', self::TD2, [49, 50, 51, 52, 53, 54, 55, 57, 58, 59, 60, 61, 62, 63, 71], self::DIGITS],
             'ni.cedula, letra' => ['ni.cedula', '0010101900001N', [13], 'ABCDEFGHJKLMNPQRSTUVWXY'],
         ];
     }

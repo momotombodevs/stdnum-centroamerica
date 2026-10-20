@@ -11,7 +11,7 @@ final class DocumentInfo
     /**
      * @param string $key clave `país.documento`, p. ej. `gt.nit`
      * @param class-string<DocumentInterface> $class clase que implementa el documento
-     * @param string $country código ISO 3166-1 alfa-2
+     * @param string $country código ISO 3166-1 alfa-2, o `ICAO` para estándares internacionales
      * @param string $name nombre del documento, p. ej. `NIT`
      */
     public function __construct(

@@ -67,7 +67,30 @@ $cedula->isValid('001-010190-0001N'); // true
 Cedula::checkLetter('0010101900001'); // "N"
 ```
 
+```php
+$mrz = "P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<\nL898902C36UTO7408122F1204159ZE184226B<<<<<10";
+Registry::isValid('mrz.td3', $mrz);       // true
+Registry::parse('mrz.td3', $mrz)?->surname;  // "ERIKSSON"
+```
+
 `Registry::describe()` devuelve el país, el nombre y el alcance (`Level::Complete` o `Level::Format`) de cada documento incluido.
+
+`Registry::parse($clave, $número)` lee los componentes que el número ya trae: devuelve un objeto de solo lectura, o `null` si el número no es válido. Está disponible en `ni.cedula`, `hn.identidad`, `gt.dpi`, `pa.cedula` y las tres MRZ (`mrz.td1`, `mrz.td2`, `mrz.td3`); en los demás lanza `InvalidArgumentException`.
+
+```php
+$cedula = Registry::parse('ni.cedula', '001-010190-0001N');
+$cedula->municipalityCode;        // 1
+$cedula->birthDay;                // 1
+$cedula->birthMonth;              // 1
+$cedula->birthYearTwoDigits;      // 90
+$cedula->birthYearCandidates();   // [1990]: el número no dice el siglo, así que se ofrecen los años posibles (puede quedar vacío: el 29/02/01 no existe)
+
+Registry::parse('hn.identidad', '0906-1990-00001')->municipalityCode; // 6
+Registry::parse('gt.dpi', '1234 56789 0101')->departmentCode;          // 1
+Registry::parse('pa.cedula', 'PE-5-687')->kind;                        // CedulaKind::BornAbroad
+```
+
+En Nicaragua, el municipio y la letra de control son de terceros (el CSE no los publica) y el código 888 tiene una sola fuente; en Panamá, las provincias 10 a 13 y los sufijos PI y AV tampoco son oficiales (ver [docs/fuentes.md](docs/fuentes.md)). Solo se leen códigos, no nombres: las tablas de municipios completas y respaldadas por una fuente oficial aún no están. Los componentes salen de la estructura del número y no se contrastan con ningún registro, y la fecha de nacimiento es un dato personal: trátela como tal.
 
 `Registry::generate($clave)` produce un número sintético válido, útil para fixtures y datos de ejemplo (es aleatorio: puede coincidir por azar con un número real, así que no lo use como dato de personas):
 
@@ -98,12 +121,102 @@ Una clave desconocida lanza `InvalidArgumentException`. `Registry::keys()` lista
 | Costa Rica | NITE | `cr.nite` | formato |
 | Panamá | Cédula | `pa.cedula` | formato |
 | Panamá | RUC | `pa.ruc` | formato (no valida el DV) |
+| Internacional | MRZ de pasaporte (TD3) | `mrz.td3` | completa (ICAO 9303) |
+| Internacional | MRZ de cédula (TD1) | `mrz.td1` | completa (ICAO 9303) |
+| Internacional | MRZ de identidad (TD2) | `mrz.td2` | completa (ICAO 9303) |
 
 Notas:
+
+- Las **MRZ** (zona de lectura mecánica de pasaportes y cédulas) se reciben con o sin saltos de línea. `Registry::parse()` devuelve los datos de una MRZ válida; las fechas quedan en `AAMMDD`, porque el siglo no se puede inferir. No se valida el número de pasaporte de cada país, solo la MRZ, que es un estándar público. El paquete valida pero no guarda ni registra nada.
 
 - En **Panamá** tomo y asiento tienen longitud variable, así que el número solo se interpreta con guiones. Use `format()` para la forma canónica (`8-926-1601`); `compact()` quita los guiones.
 - En **Honduras**, `hn.identidad` acepta los códigos especiales de naturalizados (`0890`) y doble nacionalidad (`0880`).
 - Las fuentes de cada regla, con la fecha de consulta, están en [docs/fuentes.md](docs/fuentes.md).
+
+## Uso con Laravel
+
+No hace falta un plugin: el paquete es PHP puro y se llama directamente desde un `FormRequest`, un controlador o un job. Después de `composer require`, no hay nada que registrar.
+
+**Regla en línea**, para un caso puntual:
+
+```php
+use Closure;
+use StdNumCentroamerica\Registry;
+
+public function rules(): array
+{
+    return [
+        'dpi' => ['required', function (string $attribute, mixed $value, Closure $fail) {
+            if (! Registry::isValid('gt.dpi', (string) $value)) {
+                $fail('El campo :attribute no es un DPI válido.');
+            }
+        }],
+    ];
+}
+```
+
+**Regla reutilizable**, con un mensaje distinto según el motivo (`app/Rules/DocumentoCentroamericano.php`, Laravel 10 o superior):
+
+```php
+namespace App\Rules;
+
+use Closure;
+use Illuminate\Contracts\Validation\ValidationRule;
+use StdNumCentroamerica\Registry;
+use StdNumCentroamerica\ValidationError;
+
+class DocumentoCentroamericano implements ValidationRule
+{
+    /** @param array<string, mixed> $options opciones del documento, p. ej. ['strictLetter' => false] */
+    public function __construct(private string $documento, private array $options = [])
+    {
+    }
+
+    public function validate(string $attribute, mixed $value, Closure $fail): void
+    {
+        $error = Registry::validate($this->documento, (string) $value, $this->options)->error;
+
+        if ($error !== null) {
+            $fail(match ($error) {
+                ValidationError::Format => 'El campo :attribute no tiene el formato de este documento.',
+                ValidationError::Component => 'El campo :attribute tiene una fecha o un código que no existe.',
+                ValidationError::Checksum => 'El dígito de control del campo :attribute no coincide.',
+            });
+        }
+    }
+}
+```
+
+```php
+'dpi' => ['required', new DocumentoCentroamericano('gt.dpi')],
+'cedula' => ['required', new DocumentoCentroamericano('ni.cedula', ['strictLetter' => false])],
+```
+
+Laravel no ejecuta las reglas sobre valores vacíos: combínelas con `required` o `nullable`. Para que los mensajes salgan traducidos, use `lang/es/validation.php` y `trans()` en lugar de las cadenas del ejemplo.
+
+**Guardar el número normalizado**, antes de validar:
+
+```php
+protected function prepareForValidation(): void
+{
+    $this->merge(['dpi' => Registry::make('gt.dpi')->compact((string) $this->dpi)]);
+}
+```
+
+En Panamá use `format()` en lugar de `compact()`, porque los guiones forman parte del número.
+
+**Cruzar la fecha de nacimiento** que escribe el usuario con la de la cédula de Nicaragua:
+
+```php
+$cedula = Registry::parse('ni.cedula', (string) $request->cedula);
+
+$coincide = $cedula !== null
+    && $cedula->birthDay === (int) $fecha->day
+    && $cedula->birthMonth === (int) $fecha->month
+    && in_array((int) $fecha->year, $cedula->birthYearCandidates(), true);
+```
+
+El número no trae el siglo, así que `birthYearCandidates()` devuelve los años posibles y la comprobación se hace contra ellos. Por esa razón no sirve para decidir la mayoría de edad: un nacido en 2010 también tiene el candidato 1910.
 
 ## Desarrollo
 

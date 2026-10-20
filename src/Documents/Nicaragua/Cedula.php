@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace StdNumCentroamerica\Documents\Nicaragua;
 
 use StdNumCentroamerica\Contracts\GeneratesNumbers;
+use StdNumCentroamerica\Contracts\ParsesNumbers;
 use StdNumCentroamerica\Data\NicaraguaMunicipios;
 use StdNumCentroamerica\Documents\AbstractDocument;
 use StdNumCentroamerica\ValidationError;
@@ -20,8 +21,10 @@ use StdNumCentroamerica\ValidationError;
  * Opciones: $strictLetter = false desactiva la letra; $strictMunicipality exige un
  * código de la lista conocida, incompleta (ver {@see NicaraguaMunicipios}), por lo que
  * puede rechazar cédulas válidas. Se pasan a Registry::make() como opciones.
+ *
+ * @implements ParsesNumbers<CedulaData>
  */
-class Cedula extends AbstractDocument implements GeneratesNumbers
+class Cedula extends AbstractDocument implements GeneratesNumbers, ParsesNumbers
 {
     private const LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXY';
 
@@ -55,6 +58,23 @@ class Cedula extends AbstractDocument implements GeneratesNumbers
             . self::randomDigits(4);
 
         return $digits . self::checkLetter($digits);
+    }
+
+    public function parse(string $number): ?CedulaData
+    {
+        $compact = $this->validated($number);
+        if ($compact === null) {
+            return null;
+        }
+
+        return new CedulaData(
+            municipalityCode: (int) substr($compact, 0, 3),
+            birthDay: (int) substr($compact, 3, 2),
+            birthMonth: (int) substr($compact, 5, 2),
+            birthYearTwoDigits: (int) substr($compact, 7, 2),
+            sequence: substr($compact, 9, 4),
+            letter: $compact[13],
+        );
     }
 
     public function format(string $number): string
