@@ -76,13 +76,15 @@ $cedula = Registry::parse('ni.cedula', '001-010190-0001N');
 $cedula->municipalityCode;        // 1
 $cedula->birthDay;                // 1
 $cedula->birthMonth;              // 1
-$cedula->birthYear2;              // 90
-$cedula->birthYearCandidates();   // [1990]: el número no dice el siglo, así que se ofrecen los años posibles
+$cedula->birthYearTwoDigits;      // 90
+$cedula->birthYearCandidates();   // [1990]: el número no dice el siglo, así que se ofrecen los años posibles (puede quedar vacío: el 29/02/01 no existe)
 
 Registry::parse('hn.identidad', '0906-1990-00001')->municipalityCode; // 6
+Registry::parse('gt.dpi', '1234 56789 0101')->departmentCode;          // 1
+Registry::parse('pa.cedula', 'PE-5-687')->kind;                        // CedulaKind::BornAbroad
 ```
 
-Solo se leen códigos, no nombres: las tablas de municipios completas y respaldadas por una fuente oficial aún no están. Los componentes salen de la estructura del número y no se contrastan con ningún registro, y la fecha de nacimiento es un dato personal: trátela como tal.
+En Nicaragua, el municipio y la letra de control son de terceros (el CSE no los publica) y el código 888 tiene una sola fuente; en Panamá, las provincias 10 a 13 y los sufijos PI y AV tampoco son oficiales (ver [docs/fuentes.md](docs/fuentes.md)). Solo se leen códigos, no nombres: las tablas de municipios completas y respaldadas por una fuente oficial aún no están. Los componentes salen de la estructura del número y no se contrastan con ningún registro, y la fecha de nacimiento es un dato personal: trátela como tal.
 
 `Registry::generate($clave)` produce un número sintético válido, útil para fixtures y datos de ejemplo (es aleatorio: puede coincidir por azar con un número real, así que no lo use como dato de personas):
 

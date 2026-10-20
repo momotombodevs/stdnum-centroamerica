@@ -46,8 +46,8 @@ class Dpi extends AbstractDocument implements GeneratesNumbers, ParsesNumbers
 
     public function parse(string $number): ?DpiData
     {
-        $compact = $this->compact($number);
-        if ($this->check($compact) !== null) {
+        $compact = $this->validated($number);
+        if ($compact === null) {
             return null;
         }
 

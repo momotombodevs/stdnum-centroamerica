@@ -56,20 +56,20 @@ class Cedula extends AbstractDocument implements GeneratesNumbers, ParsesNumbers
 
     public function parse(string $number): ?CedulaData
     {
-        $normalized = self::normalize($number);
-        if ($this->check($normalized) !== null) {
+        $normalized = $this->validated($number);
+        if ($normalized === null) {
             return null;
         }
 
         $parts = explode('-', $normalized);
 
         return match ($parts[0]) {
-            'PE' => new CedulaData(CedulaKind::BornAbroad, null, null, $parts[1], $parts[2]),
-            'N' => new CedulaData(CedulaKind::Naturalized, null, null, $parts[1], $parts[2]),
-            'E' => new CedulaData(CedulaKind::ForeignResident, (int) $parts[1], null, null, $parts[2]),
+            'PE' => new CedulaData(CedulaKind::BornAbroad, volume: $parts[1], entry: $parts[2]),
+            'N' => new CedulaData(CedulaKind::Naturalized, volume: $parts[1], entry: $parts[2]),
+            'E' => new CedulaData(CedulaKind::ForeignResident, provinceCode: (int) $parts[1], entry: $parts[2]),
             default => count($parts) === 4
                 ? new CedulaData(CedulaKind::Birth, (int) $parts[0], $parts[1], $parts[2], $parts[3])
-                : new CedulaData(CedulaKind::Birth, (int) $parts[0], null, $parts[1], $parts[2]),
+                : new CedulaData(CedulaKind::Birth, (int) $parts[0], volume: $parts[1], entry: $parts[2]),
         };
     }
 

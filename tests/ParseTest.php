@@ -25,9 +25,10 @@ class ParseTest extends TestCase
         $this->assertSame(1, $data->municipalityCode);
         $this->assertSame(1, $data->birthDay);
         $this->assertSame(1, $data->birthMonth);
-        $this->assertSame(90, $data->birthYear2);
+        $this->assertSame(90, $data->birthYearTwoDigits);
         $this->assertSame('0001', $data->sequence);
         $this->assertSame('N', $data->letter);
+        $this->assertFalse($data->isBornAbroad());
     }
 
     public function test_el_siglo_de_la_cedula_se_ofrece_como_candidatos(): void
@@ -35,12 +36,38 @@ class ParseTest extends TestCase
         $data = Registry::parse('ni.cedula', '001-010190-0001N');
         $this->assertInstanceOf(NiCedulaData::class, $data);
         // 2090 aún no ocurre
-        $this->assertSame([1990], $data->birthYearCandidates(2026));
-        $this->assertSame([1990, 2090], $data->birthYearCandidates(2100));
+        $this->assertSame([1990], $data->birthYearCandidates('20261020'));
+        $this->assertSame([1990, 2090], $data->birthYearCandidates('21001231'));
 
         $recent = Registry::parse('ni.cedula', '001-150620-0001A', ['strictLetter' => false]);
         $this->assertInstanceOf(NiCedulaData::class, $recent);
-        $this->assertSame([1920, 2020], $recent->birthYearCandidates(2026));
+        $this->assertSame([1920, 2020], $recent->birthYearCandidates('20261020'));
+    }
+
+    public function test_un_candidato_con_fecha_futura_del_mismo_ano_se_descarta(): void
+    {
+        $recent = Registry::parse('ni.cedula', '001-150620-0001A', ['strictLetter' => false]);
+
+        $this->assertInstanceOf(NiCedulaData::class, $recent);
+        $this->assertSame([1920], $recent->birthYearCandidates('20200101')); // 15/06/2020 aún no llega
+        $this->assertSame([1920, 2020], $recent->birthYearCandidates('20200615'));
+    }
+
+    public function test_los_candidatos_pueden_quedar_vacios(): void
+    {
+        // El 29/02/01 no existe ni en 1901 ni en 2001
+        $data = Registry::parse('ni.cedula', '001-290201-0001A', ['strictLetter' => false]);
+
+        $this->assertInstanceOf(NiCedulaData::class, $data);
+        $this->assertSame([], $data->birthYearCandidates('20261020'));
+    }
+
+    public function test_la_cedula_respeta_strict_municipality(): void
+    {
+        $options = ['strictLetter' => false, 'strictMunicipality' => true];
+
+        $this->assertNotNull(Registry::parse('ni.cedula', '282-010190-0001A', ['strictLetter' => false]));
+        $this->assertNull(Registry::parse('ni.cedula', '282-010190-0001A', $options));
     }
 
     public function test_el_29_de_febrero_descarta_los_anos_no_bisiestos(): void
@@ -48,7 +75,7 @@ class ParseTest extends TestCase
         $data = Registry::parse('ni.cedula', '001-290200-0001A', ['strictLetter' => false]);
 
         $this->assertInstanceOf(NiCedulaData::class, $data);
-        $this->assertSame([2000], $data->birthYearCandidates(2026)); // 1900 no fue bisiesto
+        $this->assertSame([2000], $data->birthYearCandidates('20261020')); // 1900 no fue bisiesto
     }
 
     public function test_cedula_de_nicaragua_de_nacido_en_el_extranjero(): void
@@ -58,6 +85,7 @@ class ParseTest extends TestCase
 
         $this->assertInstanceOf(NiCedulaData::class, $data);
         $this->assertSame(888, $data->municipalityCode);
+        $this->assertTrue($data->isBornAbroad());
     }
 
     public function test_identidad_de_honduras(): void

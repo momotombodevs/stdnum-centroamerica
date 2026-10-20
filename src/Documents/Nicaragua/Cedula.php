@@ -62,8 +62,8 @@ class Cedula extends AbstractDocument implements GeneratesNumbers, ParsesNumbers
 
     public function parse(string $number): ?CedulaData
     {
-        $compact = $this->compact($number);
-        if ($this->check($compact) !== null) {
+        $compact = $this->validated($number);
+        if ($compact === null) {
             return null;
         }
 
@@ -71,7 +71,7 @@ class Cedula extends AbstractDocument implements GeneratesNumbers, ParsesNumbers
             municipalityCode: (int) substr($compact, 0, 3),
             birthDay: (int) substr($compact, 3, 2),
             birthMonth: (int) substr($compact, 5, 2),
-            birthYear2: (int) substr($compact, 7, 2),
+            birthYearTwoDigits: (int) substr($compact, 7, 2),
             sequence: substr($compact, 9, 4),
             letter: $compact[13],
         );

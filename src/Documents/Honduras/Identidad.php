@@ -53,8 +53,8 @@ class Identidad extends AbstractDocument implements GeneratesNumbers, ParsesNumb
 
     public function parse(string $number): ?IdentidadData
     {
-        $compact = $this->compact($number);
-        if ($this->check($compact) !== null) {
+        $compact = $this->validated($number);
+        if ($compact === null) {
             return null;
         }
 

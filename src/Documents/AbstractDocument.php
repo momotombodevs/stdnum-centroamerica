@@ -23,6 +23,14 @@ abstract class AbstractDocument implements DocumentInterface
         return new ValidationResult($this->check($this->prepare($number)));
     }
 
+    /** La forma validada del número, o null si no es válido: punto de partida de parse(). */
+    protected function validated(string $number): ?string
+    {
+        $prepared = $this->prepare($number);
+
+        return $this->check($prepared) === null ? $prepared : null;
+    }
+
     /** Forma sobre la que se valida; por defecto la compacta. Panamá conserva los guiones. */
     protected function prepare(string $number): string
     {
