@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace StdNumCentroamerica\Documents\Guatemala;
 
 use StdNumCentroamerica\Contracts\GeneratesNumbers;
+use StdNumCentroamerica\Contracts\ParsesNumbers;
 use StdNumCentroamerica\Documents\AbstractDocument;
 use StdNumCentroamerica\ValidationError;
 
@@ -12,8 +13,10 @@ use StdNumCentroamerica\ValidationError;
  * DPI / CUI (RENAP): 8 dígitos + verificador + departamento (2) + municipio (2).
  * Nivel: completa en el verificador (pesos 2..9, módulo 11; fórmula de código abierto)
  * y en el departamento (01-22). No se valida la tabla de municipios por departamento.
+ *
+ * @implements ParsesNumbers<DpiData>
  */
-class Dpi extends AbstractDocument implements GeneratesNumbers
+class Dpi extends AbstractDocument implements GeneratesNumbers, ParsesNumbers
 {
     protected const PATTERN = '/^\d{13}$/';
 
@@ -39,6 +42,20 @@ class Dpi extends AbstractDocument implements GeneratesNumbers
 
         return $body . self::checkDigit($body)
             . sprintf('%02d%02d', random_int(1, self::DEPARTMENTS), random_int(1, 20));
+    }
+
+    public function parse(string $number): ?DpiData
+    {
+        $compact = $this->validated($number);
+        if ($compact === null) {
+            return null;
+        }
+
+        return new DpiData(
+            serial: substr($compact, 0, 8),
+            departmentCode: (int) substr($compact, 9, 2),
+            municipalityCode: (int) substr($compact, 11, 2),
+        );
     }
 
     public function format(string $number): string
