@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace StdNumCentroamerica\Documents\ElSalvador;
 
 use StdNumCentroamerica\Documents\AbstractDocument;
+use StdNumCentroamerica\ValidationError;
 
 /**
  * NIT (Ministerio de Hacienda), 0000-000000-000-0. Nivel: completa.
@@ -22,14 +23,16 @@ class Nit extends AbstractDocument
     {
     }
 
-    public function isValid(string $number): bool
+    protected function check(string $compact): ?ValidationError
     {
-        $compact = $this->compact($number);
-
         return match (strlen($compact)) {
-            9 => $this->dui->isValid($compact),
-            14 => ctype_digit($compact) && self::checkDigit($compact) === (int) $compact[13],
-            default => false,
+            9 => $this->dui->validate($compact)->error,
+            14 => match (true) {
+                !ctype_digit($compact) => ValidationError::Format,
+                self::checkDigit($compact) !== (int) $compact[13] => ValidationError::Checksum,
+                default => null,
+            },
+            default => ValidationError::Format,
         };
     }
 

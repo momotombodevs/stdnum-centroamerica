@@ -57,6 +57,12 @@ class Registry
     }
 
     /** @param array<string, mixed> $options ver {@see make()} */
+    public static function validate(string $key, string $number, array $options = []): ValidationResult
+    {
+        return self::make($key, $options)->validate($number);
+    }
+
+    /** @param array<string, mixed> $options ver {@see make()} */
     public static function isValid(string $key, string $number, array $options = []): bool
     {
         return self::make($key, $options)->isValid($number);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace StdNumCentroamerica\Documents\Guatemala;
 
 use StdNumCentroamerica\Documents\AbstractDocument;
+use StdNumCentroamerica\ValidationError;
 
 /**
  * DPI / CUI (RENAP): 8 dígitos + verificador + departamento (2) + municipio (2).
@@ -15,19 +16,20 @@ class Dpi extends AbstractDocument
 {
     protected const PATTERN = '/^\d{13}$/';
 
-    public function isValid(string $number): bool
+    protected function check(string $compact): ?ValidationError
     {
-        $compact = $this->compact($number);
-
-        if (!parent::isValid($compact)) {
-            return false;
+        if ($error = parent::check($compact)) {
+            return $error;
         }
 
         $department = (int) substr($compact, 9, 2);
         $municipality = (int) substr($compact, 11, 2);
 
-        return $department >= 1 && $department <= 22 && $municipality >= 1
-            && self::weightedSum($compact, range(2, 9)) % 11 === (int) $compact[8];
+        if ($department < 1 || $department > 22 || $municipality < 1) {
+            return ValidationError::Component;
+        }
+
+        return self::weightedSum($compact, range(2, 9)) % 11 === (int) $compact[8] ? null : ValidationError::Checksum;
     }
 
     public function format(string $number): string

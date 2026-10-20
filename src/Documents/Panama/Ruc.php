@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace StdNumCentroamerica\Documents\Panama;
 
 use StdNumCentroamerica\Documents\AbstractDocument;
+use StdNumCentroamerica\ValidationError;
+use StdNumCentroamerica\ValidationResult;
 
 /**
  * RUC (DGI). Nivel: formato, sin el dígito verificador.
@@ -31,21 +33,19 @@ class Ruc extends AbstractDocument
         '/^\d{1,10}-\d{1,6}-\d{1,8}$/',
     ];
 
-    public function isValid(string $number): bool
+    public function validate(string $number): ValidationResult
     {
         $normalized = Cedula::normalize($number);
 
-        if (strlen($normalized) < 5 || strlen($normalized) > 21) {
-            return false;
-        }
-
-        foreach ([Cedula::PATTERN, ...self::OTHER_FORMS] as $pattern) {
-            if (preg_match($pattern, $normalized) === 1) {
-                return true;
+        if (strlen($normalized) >= 5 && strlen($normalized) <= 21) {
+            foreach ([Cedula::PATTERN, ...self::OTHER_FORMS] as $pattern) {
+                if (preg_match($pattern, $normalized) === 1) {
+                    return ValidationResult::ok();
+                }
             }
         }
 
-        return false;
+        return ValidationResult::fail(ValidationError::Format);
     }
 
     public function format(string $number): string
