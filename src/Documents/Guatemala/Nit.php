@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace StdNumCentroamerica\Documents\Guatemala;
 
+use StdNumCentroamerica\Contracts\GeneratesNumbers;
 use StdNumCentroamerica\Documents\AbstractDocument;
 use StdNumCentroamerica\ValidationError;
 
@@ -13,14 +14,20 @@ use StdNumCentroamerica\ValidationError;
  * dígitos del CUI; con cuerpo de 8 dígitos ambos verificadores coinciden (los pesos
  * 9..2 y 2..9 suman 11), por lo que no requiere regla aparte.
  */
-class Nit extends AbstractDocument
+class Nit extends AbstractDocument implements GeneratesNumbers
 {
     protected const PATTERN = '/^\d{1,11}[0-9K]$/';
 
-    protected function check(string $compact): ?ValidationError
+    protected function checkContent(string $compact): ?ValidationError
     {
-        return parent::check($compact)
-            ?? (self::checkDigit(substr($compact, 0, -1)) === substr($compact, -1) ? null : ValidationError::Checksum);
+        return self::checkDigit(substr($compact, 0, -1)) === substr($compact, -1) ? null : ValidationError::Checksum;
+    }
+
+    public function generate(): string
+    {
+        $body = self::randomDigits(random_int(5, 8), true);
+
+        return $body . self::checkDigit($body);
     }
 
     public function format(string $number): string

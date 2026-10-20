@@ -52,7 +52,8 @@
             "@cs",
             "@analyse",
             "@test"
-        ]
+        ],
+        "coverage": "phpunit --coverage-text --coverage-clover=build/coverage.xml"
     },
     "config": {
         "sort-packages": true

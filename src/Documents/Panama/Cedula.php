@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace StdNumCentroamerica\Documents\Panama;
 
+use StdNumCentroamerica\Contracts\GeneratesNumbers;
 use StdNumCentroamerica\Documents\AbstractDocument;
 use StdNumCentroamerica\ValidationError;
 use StdNumCentroamerica\ValidationResult;
@@ -25,7 +26,7 @@ use StdNumCentroamerica\ValidationResult;
  * sufijos PI (indígena) y AV (anterior al Registro Civil) entre la provincia y el
  * tomo. Longitudes de tomo y asiento (1-6 dígitos): permisivas.
  */
-class Cedula extends AbstractDocument
+class Cedula extends AbstractDocument implements GeneratesNumbers
 {
     private const PROVINCE = '(?:1[0-3]|[1-9])';
 
@@ -44,9 +45,14 @@ class Cedula extends AbstractDocument
 
     public function validate(string $number): ValidationResult
     {
-        return ValidationResult::from(
+        return new ValidationResult(
             preg_match(self::PATTERN, self::normalize($number)) === 1 ? null : ValidationError::Format,
         );
+    }
+
+    public function generate(): string
+    {
+        return random_int(1, 9) . '-' . random_int(1, 999) . '-' . random_int(1, 99999);
     }
 
     public function format(string $number): string

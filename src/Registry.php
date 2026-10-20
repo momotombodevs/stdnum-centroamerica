@@ -6,6 +6,7 @@ namespace StdNumCentroamerica;
 
 use InvalidArgumentException;
 use StdNumCentroamerica\Contracts\DocumentInterface;
+use StdNumCentroamerica\Contracts\GeneratesNumbers;
 use StdNumCentroamerica\Documents\CostaRica;
 use StdNumCentroamerica\Documents\ElSalvador;
 use StdNumCentroamerica\Documents\Guatemala;
@@ -15,7 +16,11 @@ use StdNumCentroamerica\Documents\Panama;
 
 class Registry
 {
-    /** Clave => [clase, país ISO 3166-1, nombre, alcance de la validación]. */
+    /**
+     * Clave => [clase, país ISO 3166-1, nombre, alcance de la validación].
+     *
+     * @var array<string, array{class-string<DocumentInterface>, string, string, Level}>
+     */
     private const DOCUMENTS = [
         'gt.nit' => [Guatemala\Nit::class, 'GT', 'NIT', Level::Complete],
         'gt.dpi' => [Guatemala\Dpi::class, 'GT', 'DPI (CUI)', Level::Complete],
@@ -67,6 +72,20 @@ class Registry
     public static function isValid(string $key, string $number, array $options = []): bool
     {
         return self::make($key, $options)->isValid($number);
+    }
+
+    /**
+     * Número sintético válido para pruebas y datos de ejemplo; es aleatorio y podría coincidir por azar con uno real.
+     *
+     * @param array<string, mixed> $options ver {@see make()}
+     */
+    public static function generate(string $key, array $options = []): string
+    {
+        $document = self::make($key, $options);
+
+        return $document instanceof GeneratesNumbers
+            ? $document->generate()
+            : throw new InvalidArgumentException('El documento ' . $key . ' no genera números');
     }
 
     /** @return string[] */

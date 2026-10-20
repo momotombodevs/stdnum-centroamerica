@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace StdNumCentroamerica\Documents\Nicaragua;
 
+use StdNumCentroamerica\Contracts\GeneratesNumbers;
 use StdNumCentroamerica\Documents\AbstractDocument;
 use StdNumCentroamerica\ValidationError;
 
@@ -14,7 +15,7 @@ use StdNumCentroamerica\ValidationError;
  * Fuente: DGI, AVISO/072/05-2022 (Disposición Administrativa General 01-2013).
  * Nivel: formato.
  */
-class Ruc extends AbstractDocument
+class Ruc extends AbstractDocument implements GeneratesNumbers
 {
     public function __construct(private readonly Cedula $cedula = new Cedula())
     {
@@ -27,6 +28,11 @@ class Ruc extends AbstractDocument
         }
 
         return preg_match('/^[JNRE]\d{13}$/', $compact) === 1 ? null : $this->cedula->validate($compact)->error;
+    }
+
+    public function generate(): string
+    {
+        return ['J', 'N', 'R', 'E'][random_int(0, 3)] . self::randomDigits(13);
     }
 
     public function format(string $number): string

@@ -69,6 +69,12 @@ Cedula::checkLetter('0010101900001'); // "N"
 
 `Registry::describe()` devuelve el país, el nombre y el alcance (`Level::Complete` o `Level::Format`) de cada documento incluido.
 
+`Registry::generate($clave)` produce un número sintético válido, útil para fixtures y datos de ejemplo (es aleatorio: puede coincidir por azar con un número real, así que no lo use como dato de personas):
+
+```php
+Registry::generate('gt.dpi'); // "2381590430101"
+```
+
 Una clave desconocida lanza `InvalidArgumentException`. `Registry::keys()` lista las claves disponibles y `Registry::register($clave, $clase)` agrega o reemplaza un documento (la clase debe implementar `DocumentInterface`).
 
 ## Documentos soportados
@@ -108,7 +114,7 @@ composer ci   # estilo (php-cs-fixer), análisis estático (phpstan nivel 8) y p
 
 `composer cs:fix` aplica el estilo; `composer test`, `composer analyse` y `composer cs` corren cada paso por separado.
 
-Para agregar un documento: clase en `src/Documents/<Pais>/` que extienda `AbstractDocument` (con `PATTERN` si basta una expresión regular; las reglas adicionales van en `check()`, que devuelve un `ValidationError` o `null`), prueba en `tests/<Pais>/` que extienda `DocumentTestCase`, clave en `Registry::DOCUMENTS` y fila en la tabla de arriba y en `docs/fuentes.md`.
+Para agregar un documento: clase en `src/Documents/<Pais>/` que extienda `AbstractDocument` (con `PATTERN` si basta una expresión regular; las reglas adicionales van en `checkContent()`, que devuelve un `ValidationError` o `null`; sin `PATTERN`, sobrescriba `check()`), implemente `GeneratesNumbers`, prueba en `tests/<Pais>/` que extienda `DocumentTestCase`, clave en `Registry::DOCUMENTS` y fila en la tabla de arriba y en `docs/fuentes.md`.
 
 ## Contribuir y seguridad
 

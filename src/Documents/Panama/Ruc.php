@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace StdNumCentroamerica\Documents\Panama;
 
+use StdNumCentroamerica\Contracts\GeneratesNumbers;
 use StdNumCentroamerica\Documents\AbstractDocument;
 use StdNumCentroamerica\ValidationError;
 use StdNumCentroamerica\ValidationResult;
@@ -25,7 +26,7 @@ use StdNumCentroamerica\ValidationResult;
  * - persona jurídica: tres grupos numéricos del Registro Público, p. ej.
  *   00023824-0930-212623 (ejemplo de la ficha). Longitud por grupo permisiva.
  */
-class Ruc extends AbstractDocument
+class Ruc extends AbstractDocument implements GeneratesNumbers
 {
     private const OTHER_FORMS = [
         '/^(?:PE-\d{1,6}-\d{1,6}-\d{1,6}|(?:1[0-3]|[1-9])-PE-\d{1,6}-\d{1,6})$/',
@@ -40,12 +41,17 @@ class Ruc extends AbstractDocument
         if (strlen($normalized) >= 5 && strlen($normalized) <= 21) {
             foreach ([Cedula::PATTERN, ...self::OTHER_FORMS] as $pattern) {
                 if (preg_match($pattern, $normalized) === 1) {
-                    return ValidationResult::ok();
+                    return new ValidationResult();
                 }
             }
         }
 
-        return ValidationResult::fail(ValidationError::Format);
+        return new ValidationResult(ValidationError::Format);
+    }
+
+    public function generate(): string
+    {
+        return (new Cedula())->generate();
     }
 
     public function format(string $number): string
