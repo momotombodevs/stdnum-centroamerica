@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace StdNumCentroamerica\Tests\Panama;
 
 use PHPUnit\Framework\Attributes\DataProvider;

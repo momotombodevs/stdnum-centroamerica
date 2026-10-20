@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace StdNumCentroamerica\Documents\CostaRica;
 
 use StdNumCentroamerica\Documents\AbstractDocument;
