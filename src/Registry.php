@@ -75,7 +75,7 @@ class Registry
     }
 
     /**
-     * Número sintético válido para pruebas y datos de ejemplo; no es de una persona real.
+     * Número sintético válido para pruebas y datos de ejemplo; es aleatorio y podría coincidir por azar con uno real.
      *
      * @param array<string, mixed> $options ver {@see make()}
      */

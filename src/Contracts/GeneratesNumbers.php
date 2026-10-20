@@ -7,6 +7,6 @@ namespace StdNumCentroamerica\Contracts;
 /** Documento capaz de producir números sintéticos que pasan su propia validación. */
 interface GeneratesNumbers
 {
-    /** Número aleatorio válido, en forma compacta; no corresponde a una persona real. */
+    /** Número aleatorio válido, en forma compacta; es aleatorio y podría coincidir por azar con uno real. */
     public function generate(): string;
 }
