@@ -15,22 +15,23 @@ use StdNumCentroamerica\Documents\Panama;
 
 class Registry
 {
+    /** Clave => [clase, país ISO 3166-1, nombre, alcance de la validación]. */
     private const DOCUMENTS = [
-        'gt.nit' => Guatemala\Nit::class,
-        'gt.dpi' => Guatemala\Dpi::class,
-        'sv.dui' => ElSalvador\Dui::class,
-        'sv.nit' => ElSalvador\Nit::class,
-        'sv.nrc' => ElSalvador\Nrc::class,
-        'hn.identidad' => Honduras\Identidad::class,
-        'hn.rtn' => Honduras\Rtn::class,
-        'ni.cedula' => Nicaragua\Cedula::class,
-        'ni.ruc' => Nicaragua\Ruc::class,
-        'cr.cedula_fisica' => CostaRica\CedulaFisica::class,
-        'cr.cedula_juridica' => CostaRica\CedulaJuridica::class,
-        'cr.dimex' => CostaRica\Dimex::class,
-        'cr.nite' => CostaRica\Nite::class,
-        'pa.cedula' => Panama\Cedula::class,
-        'pa.ruc' => Panama\Ruc::class,
+        'gt.nit' => [Guatemala\Nit::class, 'GT', 'NIT', Level::Complete],
+        'gt.dpi' => [Guatemala\Dpi::class, 'GT', 'DPI (CUI)', Level::Complete],
+        'sv.dui' => [ElSalvador\Dui::class, 'SV', 'DUI', Level::Complete],
+        'sv.nit' => [ElSalvador\Nit::class, 'SV', 'NIT', Level::Complete],
+        'sv.nrc' => [ElSalvador\Nrc::class, 'SV', 'NRC', Level::Format],
+        'hn.identidad' => [Honduras\Identidad::class, 'HN', 'Número de identidad', Level::Format],
+        'hn.rtn' => [Honduras\Rtn::class, 'HN', 'RTN', Level::Format],
+        'ni.cedula' => [Nicaragua\Cedula::class, 'NI', 'Cédula', Level::Complete],
+        'ni.ruc' => [Nicaragua\Ruc::class, 'NI', 'RUC', Level::Format],
+        'cr.cedula_fisica' => [CostaRica\CedulaFisica::class, 'CR', 'Cédula física', Level::Format],
+        'cr.cedula_juridica' => [CostaRica\CedulaJuridica::class, 'CR', 'Cédula jurídica', Level::Format],
+        'cr.dimex' => [CostaRica\Dimex::class, 'CR', 'DIMEX', Level::Format],
+        'cr.nite' => [CostaRica\Nite::class, 'CR', 'NITE', Level::Format],
+        'pa.cedula' => [Panama\Cedula::class, 'PA', 'Cédula', Level::Format],
+        'pa.ruc' => [Panama\Ruc::class, 'PA', 'RUC', Level::Format],
     ];
 
     /** @var array<string, class-string<DocumentInterface>> */
@@ -50,7 +51,7 @@ class Registry
     public static function make(string $key, array $options = []): DocumentInterface
     {
         $key = strtolower($key);
-        $class = self::$custom[$key] ?? self::DOCUMENTS[$key]
+        $class = self::$custom[$key] ?? self::DOCUMENTS[$key][0]
             ?? throw new InvalidArgumentException("Documento no soportado: {$key}");
 
         return new $class(...$options);
@@ -72,5 +73,21 @@ class Registry
     public static function keys(): array
     {
         return array_keys(self::$custom + self::DOCUMENTS);
+    }
+
+    /**
+     * Documentos incluidos en el paquete, con país, nombre y alcance de la validación.
+     * No lista los registrados con {@see register()}.
+     *
+     * @return list<DocumentInfo>
+     */
+    public static function describe(): array
+    {
+        $info = [];
+        foreach (self::DOCUMENTS as $key => [, $country, $name, $level]) {
+            $info[] = new DocumentInfo($key, $country, $name, $level);
+        }
+
+        return $info;
     }
 }

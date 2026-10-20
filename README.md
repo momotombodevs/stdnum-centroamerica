@@ -62,6 +62,8 @@ $cedula->isValid('001-010190-0001N'); // true
 Cedula::checkLetter('0010101900001'); // "N"
 ```
 
+`Registry::describe()` devuelve el país, el nombre y el alcance (`Level::Complete` o `Level::Format`) de cada documento incluido.
+
 Una clave desconocida lanza `InvalidArgumentException`. `Registry::keys()` lista las claves disponibles y `Registry::register($clave, $clase)` agrega o reemplaza un documento (la clase debe implementar `DocumentInterface`).
 
 ## Documentos soportados

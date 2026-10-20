@@ -6,6 +6,9 @@
 - `validate()` en `DocumentInterface`, `AbstractDocument` y `Registry`: devuelve un `ValidationResult` con el `ValidationError` (`Format`, `Component` o `Checksum`) que explica el fallo. `isValid()` queda como atajo.
 - PHPStan (nivel 8) y PHP-CS-Fixer (PSR-12) con los scripts `composer analyse`, `cs`, `cs:fix` y `ci`; job `quality` en CI, que ahora también corre en `develop` y `release/**`.
 
+- `Registry::describe()`: lista los documentos incluidos con país, nombre y `Level` (`Complete` o `Format`); una prueba lo contrasta con la tabla del README.
+- Pruebas de espacios alrededor, idempotencia de `format()` y `compact()`, entradas inválidas y mutación de caracteres protegidos por el verificador.
+
 ### Cambiado
 - Todos los archivos declaran `strict_types=1`.
 - Las clases con reglas propias implementan `check()` en lugar de sobrescribir `isValid()`. Las clases propias registradas con `Registry::register()` deben implementar `validate()`, que `AbstractDocument` ya provee.
