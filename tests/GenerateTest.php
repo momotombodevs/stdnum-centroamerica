@@ -46,6 +46,35 @@ class GenerateTest extends TestCase
         $this->assertGreaterThan(1, count($numbers));
     }
 
+    /** Recalcula los verificadores con otro orden de recorrido que el de las clases. */
+    public function test_los_verificadores_generados_coinciden_con_un_calculo_independiente(): void
+    {
+        for ($i = 0; $i < 200; $i++) {
+            $dui = Registry::generate('sv.dui');
+            $sum = 0;
+            for ($pos = 0; $pos < 8; $pos++) {
+                $sum += (int) $dui[$pos] * (9 - $pos);
+            }
+            $this->assertSame((10 - $sum % 10) % 10, (int) $dui[8], $dui);
+
+            $dpi = Registry::generate('gt.dpi');
+            $sum = 0;
+            for ($pos = 0; $pos < 8; $pos++) {
+                $sum += (int) $dpi[$pos] * ($pos + 2);
+            }
+            $this->assertSame($sum % 11, (int) $dpi[8], $dpi);
+
+            $nit = Registry::generate('gt.nit');
+            $body = substr($nit, 0, -1);
+            $sum = 0;
+            for ($pos = 0; $pos < strlen($body); $pos++) {
+                $sum += (int) $body[strlen($body) - 1 - $pos] * ($pos + 2);
+            }
+            $check = (11 - $sum % 11) % 11;
+            $this->assertSame($check === 10 ? 'K' : (string) $check, substr($nit, -1), $nit);
+        }
+    }
+
     public function test_documento_sin_generador_lanza_excepcion(): void
     {
         $document = new class () implements DocumentInterface {

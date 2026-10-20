@@ -9,3 +9,4 @@
 /.php-cs-fixer.dist.php export-ignore
 /CONTRIBUTING.md export-ignore
 /SECURITY.md export-ignore
+/tools export-ignore

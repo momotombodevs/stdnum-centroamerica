@@ -3,6 +3,7 @@ parameters:
     paths:
         - src
         - tests
+        - tools
     ignoreErrors:
         # Los proveedores de datos de las pruebas devuelven listas literales.
         -

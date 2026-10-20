@@ -59,6 +59,23 @@ abstract class DocumentTestCase extends TestCase
     }
 
     #[DataProvider('validos')]
+    public function test_no_distingue_mayusculas_de_minusculas(string $number): void
+    {
+        $this->assertTrue($this->document()->isValid(strtolower($number)));
+    }
+
+    #[DataProvider('validos')]
+    public function test_rechaza_separadores_no_soportados(string $number): void
+    {
+        $document = $this->document();
+        $compact = $document->compact($number);
+
+        foreach (['.', '/', '_'] as $separator) {
+            $this->assertFalse($document->isValid(substr_replace($compact, $separator, 1, 0)), $separator);
+        }
+    }
+
+    #[DataProvider('validos')]
     public function test_un_numero_formateado_sigue_siendo_valido(string $number): void
     {
         $document = $this->document();
