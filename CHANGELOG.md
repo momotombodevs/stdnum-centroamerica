@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.1] - 2026-10-19
+
+- Nueva publicación de 0.1.0 sin cambios de código. El tag 0.1.0 se movió después de que Packagist lo registrara y Packagist conserva la referencia anterior.
+
 ## [0.1.0] - 2026-10-19
 
 ### Agregado
