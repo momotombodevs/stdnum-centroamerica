@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Agregado
+- `Registry::parse()` y la interfaz `ParsesNumbers`: leen los componentes de `ni.cedula` (municipio, fecha de nacimiento con `birthYearCandidates()`), `hn.identidad` (departamento, municipio, año de inscripción, códigos especiales), `gt.dpi` (número de registro, departamento, municipio) y `pa.cedula` (tipo, provincia, tomo, asiento).
+
 ## [0.2.0] - 2026-10-20
 
 > Cambio incompatible: `DocumentInterface` exige `validate()`.

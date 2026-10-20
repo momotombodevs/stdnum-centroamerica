@@ -69,6 +69,21 @@ Cedula::checkLetter('0010101900001'); // "N"
 
 `Registry::describe()` devuelve el país, el nombre y el alcance (`Level::Complete` o `Level::Format`) de cada documento incluido.
 
+`Registry::parse($clave, $número)` lee los componentes que el número ya trae: devuelve un objeto de solo lectura, o `null` si el número no es válido. Está disponible en `ni.cedula`, `hn.identidad`, `gt.dpi` y `pa.cedula`; en los demás lanza `InvalidArgumentException`.
+
+```php
+$cedula = Registry::parse('ni.cedula', '001-010190-0001N');
+$cedula->municipalityCode;        // 1
+$cedula->birthDay;                // 1
+$cedula->birthMonth;              // 1
+$cedula->birthYear2;              // 90
+$cedula->birthYearCandidates();   // [1990]: el número no dice el siglo, así que se ofrecen los años posibles
+
+Registry::parse('hn.identidad', '0906-1990-00001')->municipalityCode; // 6
+```
+
+Solo se leen códigos, no nombres: las tablas de municipios completas y respaldadas por una fuente oficial aún no están. Los componentes salen de la estructura del número y no se contrastan con ningún registro, y la fecha de nacimiento es un dato personal: trátela como tal.
+
 `Registry::generate($clave)` produce un número sintético válido, útil para fixtures y datos de ejemplo (es aleatorio: puede coincidir por azar con un número real, así que no lo use como dato de personas):
 
 ```php
