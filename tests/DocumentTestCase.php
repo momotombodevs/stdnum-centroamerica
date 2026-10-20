@@ -52,6 +52,40 @@ abstract class DocumentTestCase extends TestCase
         $this->assertInstanceOf(ValidationError::class, $result->error);
     }
 
+    #[DataProvider('validos')]
+    public function test_ignora_espacios_alrededor_del_numero(string $number): void
+    {
+        $this->assertTrue($this->document()->isValid(" \t" . $number . "\n "));
+    }
+
+    #[DataProvider('validos')]
+    public function test_un_numero_formateado_sigue_siendo_valido(string $number): void
+    {
+        $document = $this->document();
+
+        $this->assertTrue($document->isValid($document->format($number)));
+    }
+
+    #[DataProvider('validos')]
+    public function test_format_y_compact_son_idempotentes(string $number): void
+    {
+        $document = $this->document();
+
+        $this->assertSame($document->format($number), $document->format($document->format($number)));
+        $this->assertSame($document->compact($number), $document->compact($document->compact($number)));
+    }
+
+    #[DataProvider('invalidos')]
+    public function test_format_y_compact_no_fallan_con_numeros_invalidos(string $number): void
+    {
+        $document = $this->document();
+
+        $document->format($number);
+        $document->compact($number);
+
+        $this->addToAssertionCount(1); // basta con que no lancen
+    }
+
     public function test_formatea_y_compacta(): void
     {
         $document = $this->document();

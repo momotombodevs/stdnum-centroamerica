@@ -7,3 +7,5 @@
 /plan-stdnum-centroamerica.md export-ignore
 /phpstan.neon.dist export-ignore
 /.php-cs-fixer.dist.php export-ignore
+/CONTRIBUTING.md export-ignore
+/SECURITY.md export-ignore

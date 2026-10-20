@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use StdNumCentroamerica\Contracts\DocumentInterface;
 use StdNumCentroamerica\Documents\CostaRica\Nite;
 use StdNumCentroamerica\Documents\Guatemala\Nit;
+use StdNumCentroamerica\Level;
 use StdNumCentroamerica\Registry;
 
 class RegistryTest extends TestCase
@@ -34,6 +35,35 @@ class RegistryTest extends TestCase
         $this->assertFalse(Registry::isValid('ni.cedula', '001-010190-0001A'));
         $this->assertTrue(Registry::isValid('ni.cedula', '001-010190-0001A', ['strictLetter' => false]));
         $this->assertFalse(Registry::isValid('ni.cedula', '282-010190-0001N', ['strictMunicipality' => true]));
+    }
+
+    public function test_describe_lista_los_documentos_incluidos(): void
+    {
+        $info = Registry::describe();
+
+        $this->assertCount(15, $info);
+        $this->assertSame('gt.nit', $info[0]->key);
+        $this->assertSame('GT', $info[0]->country);
+        $this->assertSame('NIT', $info[0]->name);
+        $this->assertSame(Level::Complete, $info[0]->level);
+    }
+
+    public function test_describe_coincide_con_la_tabla_del_readme(): void
+    {
+        $readme = (string) file_get_contents(__DIR__ . '/../README.md');
+        preg_match_all('/^\|[^|]+\|[^|]+\| `([a-z]{2}\.[a-z_]+)` \| (completa|formato)/m', $readme, $rows, PREG_SET_ORDER);
+
+        $expected = [];
+        foreach ($rows as [, $key, $level]) {
+            $expected[$key] = $level === 'completa' ? Level::Complete : Level::Format;
+        }
+
+        $actual = [];
+        foreach (Registry::describe() as $info) {
+            $actual[$info->key] = $info->level;
+        }
+
+        $this->assertSame($expected, $actual);
     }
 
     public function test_clave_desconocida_lanza_excepcion(): void

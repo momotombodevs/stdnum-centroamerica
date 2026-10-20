@@ -1,5 +1,10 @@
 # momotombo/stdnum-centroamerica
 
+[![tests](https://github.com/momotombodevs/stdnum-centroamerica/actions/workflows/tests.yml/badge.svg)](https://github.com/momotombodevs/stdnum-centroamerica/actions/workflows/tests.yml)
+[![Packagist](https://img.shields.io/packagist/v/momotombo/stdnum-centroamerica)](https://packagist.org/packages/momotombo/stdnum-centroamerica)
+[![PHP](https://img.shields.io/packagist/dependency-v/momotombo/stdnum-centroamerica/php)](composer.json)
+[![Licencia](https://img.shields.io/github/license/momotombodevs/stdnum-centroamerica)](LICENSE)
+
 Validación, formato y compactado de documentos de identidad y fiscales de Centroamérica. Sin dependencias de producción, PHP >= 8.1.
 
 ```
@@ -62,6 +67,8 @@ $cedula->isValid('001-010190-0001N'); // true
 Cedula::checkLetter('0010101900001'); // "N"
 ```
 
+`Registry::describe()` devuelve el país, el nombre y el alcance (`Level::Complete` o `Level::Format`) de cada documento incluido.
+
 Una clave desconocida lanza `InvalidArgumentException`. `Registry::keys()` lista las claves disponibles y `Registry::register($clave, $clase)` agrega o reemplaza un documento (la clase debe implementar `DocumentInterface`).
 
 ## Documentos soportados
@@ -102,6 +109,10 @@ composer ci   # estilo (php-cs-fixer), análisis estático (phpstan nivel 8) y p
 `composer cs:fix` aplica el estilo; `composer test`, `composer analyse` y `composer cs` corren cada paso por separado.
 
 Para agregar un documento: clase en `src/Documents/<Pais>/` que extienda `AbstractDocument` (con `PATTERN` si basta una expresión regular; las reglas adicionales van en `check()`, que devuelve un `ValidationError` o `null`), prueba en `tests/<Pais>/` que extienda `DocumentTestCase`, clave en `Registry::DOCUMENTS` y fila en la tabla de arriba y en `docs/fuentes.md`.
+
+## Contribuir y seguridad
+
+Vea [CONTRIBUTING.md](CONTRIBUTING.md) (flujo, commits y cómo citar fuentes) y [SECURITY.md](SECURITY.md).
 
 ## Licencia
 
