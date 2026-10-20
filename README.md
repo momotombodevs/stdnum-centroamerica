@@ -67,6 +67,14 @@ $cedula->isValid('001-010190-0001N'); // true
 Cedula::checkLetter('0010101900001'); // "N"
 ```
 
+```php
+use StdNumCentroamerica\Documents\Mrz\Td3;
+
+$mrz = "P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<\nL898902C36UTO7408122F1204159ZE184226B<<<<<10";
+Registry::isValid('mrz.td3', $mrz);       // true
+(new Td3())->parse($mrz)?->surname;       // "ERIKSSON"
+```
+
 `Registry::describe()` devuelve el país, el nombre y el alcance (`Level::Complete` o `Level::Format`) de cada documento incluido.
 
 `Registry::generate($clave)` produce un número sintético válido, útil para fixtures y datos de ejemplo (es aleatorio: puede coincidir por azar con un número real, así que no lo use como dato de personas):
@@ -98,8 +106,13 @@ Una clave desconocida lanza `InvalidArgumentException`. `Registry::keys()` lista
 | Costa Rica | NITE | `cr.nite` | formato |
 | Panamá | Cédula | `pa.cedula` | formato |
 | Panamá | RUC | `pa.ruc` | formato (no valida el DV) |
+| Internacional | MRZ de pasaporte (TD3) | `mrz.td3` | completa (ICAO 9303) |
+| Internacional | MRZ de cédula (TD1) | `mrz.td1` | completa (ICAO 9303) |
+| Internacional | MRZ de identidad (TD2) | `mrz.td2` | completa (ICAO 9303) |
 
 Notas:
+
+- Las **MRZ** (zona de lectura mecánica de pasaportes y cédulas) se reciben con o sin saltos de línea. `parse()` devuelve los datos de una MRZ válida; las fechas quedan en `AAMMDD`, porque el siglo no se puede inferir. No se valida el número de pasaporte de cada país, solo la MRZ, que es un estándar público. El paquete valida pero no guarda ni registra nada.
 
 - En **Panamá** tomo y asiento tienen longitud variable, así que el número solo se interpreta con guiones. Use `format()` para la forma canónica (`8-926-1601`); `compact()` quita los guiones.
 - En **Honduras**, `hn.identidad` acepta los códigos especiales de naturalizados (`0890`) y doble nacionalidad (`0880`).

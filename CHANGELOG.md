@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Agregado
+- MRZ de ICAO Doc 9303: `mrz.td3` (pasaporte, 2×44), `mrz.td1` (cédula, 3×30) y `mrz.td2` (identidad, 2×36). Validan formato, componentes (tipo, sexo, fechas, caracteres) y los dígitos de control del número, nacimiento, vencimiento, datos opcionales y compuesto; aceptan la MRZ con o sin saltos de línea. `parse()` devuelve un `MrzData` con los campos.
+- `DocumentInfo::$country` admite `ICAO` para los estándares internacionales.
+
 ## [0.2.0] - 2026-10-20
 
 > Cambio incompatible: `DocumentInterface` exige `validate()`.

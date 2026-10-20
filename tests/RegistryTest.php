@@ -41,7 +41,7 @@ class RegistryTest extends TestCase
     {
         $info = Registry::describe();
 
-        $this->assertCount(15, $info);
+        $this->assertCount(18, $info);
         $this->assertSame('gt.nit', $info[0]->key);
         $this->assertSame('GT', $info[0]->country);
         $this->assertSame('NIT', $info[0]->name);
@@ -52,10 +52,10 @@ class RegistryTest extends TestCase
     {
         $countries = [
             'GT' => 'Guatemala', 'SV' => 'El Salvador', 'HN' => 'Honduras',
-            'NI' => 'Nicaragua', 'CR' => 'Costa Rica', 'PA' => 'Panamá',
+            'NI' => 'Nicaragua', 'CR' => 'Costa Rica', 'PA' => 'Panamá', 'ICAO' => 'Internacional',
         ];
         $readme = (string) file_get_contents(__DIR__ . '/../README.md');
-        preg_match_all('/^\| ([^|]+) \| ([^|]+) \| `([a-z]{2}\.[a-z_]+)` \| (completa|formato)/m', $readme, $rows, PREG_SET_ORDER);
+        preg_match_all('/^\| ([^|]+) \| ([^|]+) \| `([a-z]+\.[a-z0-9_]+)` \| (completa|formato)/m', $readme, $rows, PREG_SET_ORDER);
 
         $expected = [];
         foreach ($rows as [, $country, $name, $key, $level]) {
