@@ -20,7 +20,13 @@ abstract class AbstractDocument implements DocumentInterface
 
     public function validate(string $number): ValidationResult
     {
-        return new ValidationResult($this->check($this->compact($number)));
+        return new ValidationResult($this->check($this->prepare($number)));
+    }
+
+    /** Forma sobre la que se valida; por defecto la compacta. Panamá conserva los guiones. */
+    protected function prepare(string $number): string
+    {
+        return $this->compact($number);
     }
 
     /**

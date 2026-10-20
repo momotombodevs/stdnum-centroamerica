@@ -16,31 +16,11 @@ use StdNumCentroamerica\Documents\Panama;
 
 class Registry
 {
-    /**
-     * Clave => [clase, país ISO 3166-1, nombre, alcance de la validación].
-     *
-     * @var array<string, array{class-string<DocumentInterface>, string, string, Level}>
-     */
-    private const DOCUMENTS = [
-        'gt.nit' => [Guatemala\Nit::class, 'GT', 'NIT', Level::Complete],
-        'gt.dpi' => [Guatemala\Dpi::class, 'GT', 'DPI (CUI)', Level::Complete],
-        'sv.dui' => [ElSalvador\Dui::class, 'SV', 'DUI', Level::Complete],
-        'sv.nit' => [ElSalvador\Nit::class, 'SV', 'NIT', Level::Complete],
-        'sv.nrc' => [ElSalvador\Nrc::class, 'SV', 'NRC', Level::Format],
-        'hn.identidad' => [Honduras\Identidad::class, 'HN', 'Número de identidad', Level::Format],
-        'hn.rtn' => [Honduras\Rtn::class, 'HN', 'RTN', Level::Format],
-        'ni.cedula' => [Nicaragua\Cedula::class, 'NI', 'Cédula', Level::Complete],
-        'ni.ruc' => [Nicaragua\Ruc::class, 'NI', 'RUC', Level::Format],
-        'cr.cedula_fisica' => [CostaRica\CedulaFisica::class, 'CR', 'Cédula física', Level::Format],
-        'cr.cedula_juridica' => [CostaRica\CedulaJuridica::class, 'CR', 'Cédula jurídica', Level::Format],
-        'cr.dimex' => [CostaRica\Dimex::class, 'CR', 'DIMEX', Level::Format],
-        'cr.nite' => [CostaRica\Nite::class, 'CR', 'NITE', Level::Format],
-        'pa.cedula' => [Panama\Cedula::class, 'PA', 'Cédula', Level::Format],
-        'pa.ruc' => [Panama\Ruc::class, 'PA', 'RUC', Level::Format],
-    ];
-
     /** @var array<string, class-string<DocumentInterface>> */
     private static array $custom = [];
+
+    /** @var array<string, DocumentInfo>|null */
+    private static ?array $catalog = null;
 
     /** Agrega o reemplaza un documento; tiene prioridad sobre los incluidos. */
     public static function register(string $key, string $class): void
@@ -56,7 +36,7 @@ class Registry
     public static function make(string $key, array $options = []): DocumentInterface
     {
         $key = strtolower($key);
-        $class = self::$custom[$key] ?? self::DOCUMENTS[$key][0]
+        $class = self::$custom[$key] ?? self::catalog()[$key]->class
             ?? throw new InvalidArgumentException("Documento no soportado: {$key}");
 
         return new $class(...$options);
@@ -91,7 +71,7 @@ class Registry
     /** @return string[] */
     public static function keys(): array
     {
-        return array_keys(self::$custom + self::DOCUMENTS);
+        return array_keys(self::$custom + self::catalog());
     }
 
     /**
@@ -102,11 +82,39 @@ class Registry
      */
     public static function describe(): array
     {
-        $info = [];
-        foreach (self::DOCUMENTS as $key => [, $country, $name, $level]) {
-            $info[] = new DocumentInfo($key, $country, $name, $level);
+        return array_values(self::catalog());
+    }
+
+    /** @return array<string, DocumentInfo> los documentos incluidos, por clave */
+    private static function catalog(): array
+    {
+        return self::$catalog ??= self::index(
+            new DocumentInfo('gt.nit', Guatemala\Nit::class, 'GT', 'NIT', Level::Complete),
+            new DocumentInfo('gt.dpi', Guatemala\Dpi::class, 'GT', 'DPI (CUI)', Level::Complete),
+            new DocumentInfo('sv.dui', ElSalvador\Dui::class, 'SV', 'DUI', Level::Complete),
+            new DocumentInfo('sv.nit', ElSalvador\Nit::class, 'SV', 'NIT', Level::Complete),
+            new DocumentInfo('sv.nrc', ElSalvador\Nrc::class, 'SV', 'NRC', Level::Format),
+            new DocumentInfo('hn.identidad', Honduras\Identidad::class, 'HN', 'Número de identidad', Level::Format),
+            new DocumentInfo('hn.rtn', Honduras\Rtn::class, 'HN', 'RTN', Level::Format),
+            new DocumentInfo('ni.cedula', Nicaragua\Cedula::class, 'NI', 'Cédula', Level::Complete),
+            new DocumentInfo('ni.ruc', Nicaragua\Ruc::class, 'NI', 'RUC', Level::Format),
+            new DocumentInfo('cr.cedula_fisica', CostaRica\CedulaFisica::class, 'CR', 'Cédula física', Level::Format),
+            new DocumentInfo('cr.cedula_juridica', CostaRica\CedulaJuridica::class, 'CR', 'Cédula jurídica', Level::Format),
+            new DocumentInfo('cr.dimex', CostaRica\Dimex::class, 'CR', 'DIMEX', Level::Format),
+            new DocumentInfo('cr.nite', CostaRica\Nite::class, 'CR', 'NITE', Level::Format),
+            new DocumentInfo('pa.cedula', Panama\Cedula::class, 'PA', 'Cédula', Level::Format),
+            new DocumentInfo('pa.ruc', Panama\Ruc::class, 'PA', 'RUC', Level::Format),
+        );
+    }
+
+    /** @return array<string, DocumentInfo> */
+    private static function index(DocumentInfo ...$documents): array
+    {
+        $index = [];
+        foreach ($documents as $document) {
+            $index[$document->key] = $document;
         }
 
-        return $info;
+        return $index;
     }
 }
