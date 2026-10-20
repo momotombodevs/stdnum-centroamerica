@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace StdNumCentroamerica\Documents\Guatemala;
 
+use StdNumCentroamerica\Contracts\GeneratesNumbers;
 use StdNumCentroamerica\Documents\AbstractDocument;
 use StdNumCentroamerica\ValidationError;
 
@@ -12,7 +13,7 @@ use StdNumCentroamerica\ValidationError;
  * Nivel: completa en el verificador (pesos 2..9, módulo 11; fórmula de código abierto)
  * y en el departamento (01-22). No se valida la tabla de municipios por departamento.
  */
-class Dpi extends AbstractDocument
+class Dpi extends AbstractDocument implements GeneratesNumbers
 {
     protected const PATTERN = '/^\d{13}$/';
 
@@ -30,6 +31,16 @@ class Dpi extends AbstractDocument
         }
 
         return self::weightedSum($compact, range(2, 9)) % 11 === (int) $compact[8] ? null : ValidationError::Checksum;
+    }
+
+    public function generate(): string
+    {
+        do {
+            $body = self::randomDigits(8);
+            $check = self::weightedSum($body, range(2, 9)) % 11;
+        } while ($check === 10);
+
+        return $body . $check . sprintf('%02d%02d', random_int(1, 22), random_int(1, 20));
     }
 
     public function format(string $number): string

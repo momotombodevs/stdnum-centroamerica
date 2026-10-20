@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace StdNumCentroamerica\Documents\Honduras;
 
+use StdNumCentroamerica\Contracts\GeneratesNumbers;
 use StdNumCentroamerica\Data\HondurasGeografia;
 use StdNumCentroamerica\Documents\AbstractDocument;
 use StdNumCentroamerica\ValidationError;
@@ -17,7 +18,7 @@ use StdNumCentroamerica\ValidationError;
  * (doble nacionalidad) y 0890 (naturalizados; el año es el del acuerdo).
  * No hay dígito verificador. Nivel: formato + geografía.
  */
-class Identidad extends AbstractDocument
+class Identidad extends AbstractDocument implements GeneratesNumbers
 {
     protected const PATTERN = '/^\d{13}$/';
 
@@ -41,6 +42,14 @@ class Identidad extends AbstractDocument
         $municipality = (int) substr($code, 2, 2);
 
         return $municipality >= 1 && $municipality <= $municipalities ? null : ValidationError::Component;
+    }
+
+    public function generate(): string
+    {
+        $department = random_int(1, 18);
+        $municipality = random_int(1, HondurasGeografia::MUNICIPIOS_POR_DEPARTAMENTO[$department]);
+
+        return sprintf('%02d%02d%04d', $department, $municipality, random_int(1950, 2005)) . self::randomDigits(5);
     }
 
     public function format(string $number): string

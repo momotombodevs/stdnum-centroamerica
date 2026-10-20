@@ -6,6 +6,7 @@ namespace StdNumCentroamerica;
 
 use InvalidArgumentException;
 use StdNumCentroamerica\Contracts\DocumentInterface;
+use StdNumCentroamerica\Contracts\GeneratesNumbers;
 use StdNumCentroamerica\Documents\CostaRica;
 use StdNumCentroamerica\Documents\ElSalvador;
 use StdNumCentroamerica\Documents\Guatemala;
@@ -67,6 +68,20 @@ class Registry
     public static function isValid(string $key, string $number, array $options = []): bool
     {
         return self::make($key, $options)->isValid($number);
+    }
+
+    /**
+     * Número sintético válido para pruebas y datos de ejemplo; no es de una persona real.
+     *
+     * @param array<string, mixed> $options ver {@see make()}
+     */
+    public static function generate(string $key, array $options = []): string
+    {
+        $document = self::make($key, $options);
+
+        return $document instanceof GeneratesNumbers
+            ? $document->generate()
+            : throw new InvalidArgumentException('El documento ' . $key . ' no genera números');
     }
 
     /** @return string[] */

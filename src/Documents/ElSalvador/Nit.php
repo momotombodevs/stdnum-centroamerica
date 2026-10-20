@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace StdNumCentroamerica\Documents\ElSalvador;
 
+use StdNumCentroamerica\Contracts\GeneratesNumbers;
 use StdNumCentroamerica\Documents\AbstractDocument;
 use StdNumCentroamerica\ValidationError;
 
@@ -17,7 +18,7 @@ use StdNumCentroamerica\ValidationError;
  * (10 pasa a 0); con correlativo mayor, pesos 2,7,6,5,4,3 repetidos y dígito 11 - resto
  * (0 si el resto es 0 o 1). Los tres NIT de muestra de la guía DTE de la DGII la cumplen.
  */
-class Nit extends AbstractDocument
+class Nit extends AbstractDocument implements GeneratesNumbers
 {
     public function __construct(private readonly Dui $dui = new Dui())
     {
@@ -34,6 +35,13 @@ class Nit extends AbstractDocument
             },
             default => ValidationError::Format,
         };
+    }
+
+    public function generate(): string
+    {
+        $body = self::randomDigits(13);
+
+        return $body . self::checkDigit($body . '0');
     }
 
     public function format(string $number): string

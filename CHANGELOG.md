@@ -7,6 +7,8 @@
 - PHPStan (nivel 8) y PHP-CS-Fixer (PSR-12) con los scripts `composer analyse`, `cs`, `cs:fix` y `ci`; job `quality` en CI, que ahora también corre en `develop` y `release/**`.
 - `Registry::describe()`: lista los documentos incluidos con país, nombre y `Level` (`Complete` o `Format`); una prueba lo contrasta con la tabla del README.
 - Pruebas de espacios alrededor, idempotencia de `format()` y `compact()`, entradas inválidas y mutación de caracteres protegidos por el verificador.
+- `Registry::generate()` y la interfaz `GeneratesNumbers`: números sintéticos válidos para los 15 documentos incluidos.
+- Job `coverage` en CI (pcov, mínimo 90 % de líneas).
 - `CONTRIBUTING.md`, `SECURITY.md` y badges en el README.
 
 ### Cambiado

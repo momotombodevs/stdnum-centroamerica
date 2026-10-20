@@ -72,6 +72,17 @@ abstract class AbstractDocument implements DocumentInterface
         return strlen($compact) < 2 ? $compact : substr($compact, 0, -1) . '-' . substr($compact, -1);
     }
 
+    /** Cadena de $length dígitos al azar; $nonZeroFirst evita el cero inicial. */
+    protected static function randomDigits(int $length, bool $nonZeroFirst = false): string
+    {
+        $digits = '';
+        for ($i = 0; $i < $length; $i++) {
+            $digits .= random_int($i === 0 && $nonZeroFirst ? 1 : 0, 9);
+        }
+
+        return $digits;
+    }
+
     /** @param int[] $weights un peso por dígito, de izquierda a derecha */
     protected static function weightedSum(string $digits, array $weights): int
     {
