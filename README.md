@@ -133,6 +133,91 @@ Notas:
 - En **Honduras**, `hn.identidad` acepta los códigos especiales de naturalizados (`0890`) y doble nacionalidad (`0880`).
 - Las fuentes de cada regla, con la fecha de consulta, están en [docs/fuentes.md](docs/fuentes.md).
 
+## Uso con Laravel
+
+No hace falta un plugin: el paquete es PHP puro y se llama directamente desde un `FormRequest`, un controlador o un job. Después de `composer require`, no hay nada que registrar.
+
+**Regla en línea**, para un caso puntual:
+
+```php
+use Closure;
+use StdNumCentroamerica\Registry;
+
+public function rules(): array
+{
+    return [
+        'dpi' => ['required', function (string $attribute, mixed $value, Closure $fail) {
+            if (! Registry::isValid('gt.dpi', (string) $value)) {
+                $fail('El campo :attribute no es un DPI válido.');
+            }
+        }],
+    ];
+}
+```
+
+**Regla reutilizable**, con un mensaje distinto según el motivo (`app/Rules/DocumentoCentroamericano.php`, Laravel 10 o superior):
+
+```php
+namespace App\Rules;
+
+use Closure;
+use Illuminate\Contracts\Validation\ValidationRule;
+use StdNumCentroamerica\Registry;
+use StdNumCentroamerica\ValidationError;
+
+class DocumentoCentroamericano implements ValidationRule
+{
+    /** @param array<string, mixed> $options opciones del documento, p. ej. ['strictLetter' => false] */
+    public function __construct(private string $documento, private array $options = [])
+    {
+    }
+
+    public function validate(string $attribute, mixed $value, Closure $fail): void
+    {
+        $error = Registry::validate($this->documento, (string) $value, $this->options)->error;
+
+        if ($error !== null) {
+            $fail(match ($error) {
+                ValidationError::Format => 'El campo :attribute no tiene el formato de este documento.',
+                ValidationError::Component => 'El campo :attribute tiene una fecha o un código que no existe.',
+                ValidationError::Checksum => 'El dígito de control del campo :attribute no coincide.',
+            });
+        }
+    }
+}
+```
+
+```php
+'dpi' => ['required', new DocumentoCentroamericano('gt.dpi')],
+'cedula' => ['required', new DocumentoCentroamericano('ni.cedula', ['strictLetter' => false])],
+```
+
+Laravel no ejecuta las reglas sobre valores vacíos: combínelas con `required` o `nullable`. Para que los mensajes salgan traducidos, use `lang/es/validation.php` y `trans()` en lugar de las cadenas del ejemplo.
+
+**Guardar el número normalizado**, antes de validar:
+
+```php
+protected function prepareForValidation(): void
+{
+    $this->merge(['dpi' => Registry::make('gt.dpi')->compact((string) $this->dpi)]);
+}
+```
+
+En Panamá use `format()` en lugar de `compact()`, porque los guiones forman parte del número.
+
+**Cruzar la fecha de nacimiento** que escribe el usuario con la de la cédula de Nicaragua:
+
+```php
+$cedula = Registry::parse('ni.cedula', (string) $request->cedula);
+
+$coincide = $cedula !== null
+    && $cedula->birthDay === (int) $fecha->day
+    && $cedula->birthMonth === (int) $fecha->month
+    && in_array((int) $fecha->year, $cedula->birthYearCandidates(), true);
+```
+
+El número no trae el siglo, así que `birthYearCandidates()` devuelve los años posibles y la comprobación se hace contra ellos. Por esa razón no sirve para decidir la mayoría de edad: un nacido en 2010 también tiene el candidato 1910.
+
 ## Desarrollo
 
 ```
