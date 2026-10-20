@@ -1,9 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace StdNumCentroamerica\Documents\Honduras;
 
+use StdNumCentroamerica\Contracts\GeneratesNumbers;
 use StdNumCentroamerica\Data\HondurasGeografia;
 use StdNumCentroamerica\Documents\AbstractDocument;
+use StdNumCentroamerica\ValidationError;
 
 /**
  * Número de identidad (RNP): 13 dígitos, 0000-0000-00000.
@@ -14,30 +18,34 @@ use StdNumCentroamerica\Documents\AbstractDocument;
  * (doble nacionalidad) y 0890 (naturalizados; el año es el del acuerdo).
  * No hay dígito verificador. Nivel: formato + geografía.
  */
-class Identidad extends AbstractDocument
+class Identidad extends AbstractDocument implements GeneratesNumbers
 {
-    public function isValid(string $number): bool
+    protected const PATTERN = '/^\d{13}$/';
+
+    protected function checkContent(string $compact): ?ValidationError
     {
-        $compact = $this->compact($number);
-
-        if (preg_match('/^\d{13}$/', $compact) !== 1) {
-            return false;
-        }
-
         $year = (int) substr($compact, 4, 4);
         if ($year < 1800 || $year > (int) date('Y')) {
-            return false;
+            return ValidationError::Component;
         }
 
         $code = substr($compact, 0, 4);
         if (in_array($code, HondurasGeografia::SPECIAL_CODES, true)) {
-            return true;
+            return null;
         }
 
         $municipalities = HondurasGeografia::MUNICIPIOS_POR_DEPARTAMENTO[(int) substr($code, 0, 2)] ?? 0;
         $municipality = (int) substr($code, 2, 2);
 
-        return $municipality >= 1 && $municipality <= $municipalities;
+        return $municipality >= 1 && $municipality <= $municipalities ? null : ValidationError::Component;
+    }
+
+    public function generate(): string
+    {
+        $department = random_int(1, 18);
+        $municipality = random_int(1, HondurasGeografia::MUNICIPIOS_POR_DEPARTAMENTO[$department]);
+
+        return sprintf('%02d%02d%04d', $department, $municipality, random_int(1950, 2005)) . self::randomDigits(5);
     }
 
     public function format(string $number): string

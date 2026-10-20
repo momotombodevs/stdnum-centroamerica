@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace StdNumCentroamerica\Documents\Panama;
 
+use StdNumCentroamerica\Contracts\GeneratesNumbers;
 use StdNumCentroamerica\Documents\AbstractDocument;
+use StdNumCentroamerica\ValidationError;
 
 /**
  * RUC (DGI). Nivel: formato, sin el dígito verificador.
@@ -21,7 +25,7 @@ use StdNumCentroamerica\Documents\AbstractDocument;
  * - persona jurídica: tres grupos numéricos del Registro Público, p. ej.
  *   00023824-0930-212623 (ejemplo de la ficha). Longitud por grupo permisiva.
  */
-class Ruc extends AbstractDocument
+class Ruc extends AbstractDocument implements GeneratesNumbers
 {
     private const OTHER_FORMS = [
         '/^(?:PE-\d{1,6}-\d{1,6}-\d{1,6}|(?:1[0-3]|[1-9])-PE-\d{1,6}-\d{1,6})$/',
@@ -29,21 +33,28 @@ class Ruc extends AbstractDocument
         '/^\d{1,10}-\d{1,6}-\d{1,8}$/',
     ];
 
-    public function isValid(string $number): bool
+    protected function prepare(string $number): string
     {
-        $normalized = Cedula::normalize($number);
+        return Cedula::normalize($number);
+    }
 
-        if (strlen($normalized) < 5 || strlen($normalized) > 21) {
-            return false;
-        }
-
-        foreach ([Cedula::PATTERN, ...self::OTHER_FORMS] as $pattern) {
-            if (preg_match($pattern, $normalized) === 1) {
-                return true;
+    protected function check(string $compact): ?ValidationError
+    {
+        if (strlen($compact) >= 5 && strlen($compact) <= 21) {
+            foreach ([Cedula::PATTERN, ...self::OTHER_FORMS] as $pattern) {
+                if (preg_match($pattern, $compact) === 1) {
+                    return null;
+                }
             }
         }
 
-        return false;
+        return ValidationError::Format;
+    }
+
+    /** Una cédula es un RUC válido (persona natural). */
+    public function generate(): string
+    {
+        return (new Cedula())->generate();
     }
 
     public function format(string $number): string

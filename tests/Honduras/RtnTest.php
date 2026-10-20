@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace StdNumCentroamerica\Tests\Honduras;
 
 use StdNumCentroamerica\Contracts\DocumentInterface;

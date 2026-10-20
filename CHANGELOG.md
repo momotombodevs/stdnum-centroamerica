@@ -1,5 +1,25 @@
 # Changelog
 
+## [Unreleased]
+
+## [0.2.0] - 2026-10-20
+
+> Cambio incompatible: `DocumentInterface` exige `validate()`.
+
+### Agregado
+- `validate()` en `DocumentInterface`, `AbstractDocument` y `Registry`: devuelve un `ValidationResult` con el `ValidationError` (`Format`, `Component` o `Checksum`) que explica el fallo. `isValid()` queda como atajo.
+- PHPStan (nivel 8) y PHP-CS-Fixer (PSR-12) con los scripts `composer analyse`, `cs`, `cs:fix` y `ci`; job `quality` en CI, que ahora también corre en `develop` y `release/**`.
+- `Registry::describe()`: lista los documentos incluidos (`DocumentInfo` con clave, clase, país, nombre y `Level`); una prueba lo contrasta con la tabla del README.
+- Pruebas de espacios alrededor, idempotencia de `format()` y `compact()`, entradas inválidas y mutación de caracteres protegidos por el verificador.
+- `Registry::generate()` y la interfaz `GeneratesNumbers`: números sintéticos válidos para los 15 documentos incluidos.
+- Job `coverage` en CI (pcov, mínimo 90 % de líneas), con `composer coverage` y `tools/check-coverage.php`.
+- `CONTRIBUTING.md`, `SECURITY.md` y badges en el README.
+
+### Cambiado
+- Todos los archivos declaran `strict_types=1`.
+- Las clases con reglas propias implementan `checkContent()` (o `check()`) en lugar de sobrescribir `isValid()`; `prepare()` cambia la forma que se valida (Panamá conserva los guiones). Las clases propias registradas con `Registry::register()` deben implementar `validate()`, que `AbstractDocument` ya provee.
+- `compact()` usa `str_replace`, que nunca devuelve `null`.
+
 ## [0.1.1] - 2026-10-19
 
 - Nueva publicación de 0.1.0 sin cambios de código. El tag 0.1.0 se movió después de que Packagist lo registrara y Packagist conserva la referencia anterior.

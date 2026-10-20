@@ -1,9 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace StdNumCentroamerica\Documents\Nicaragua;
 
+use StdNumCentroamerica\Contracts\GeneratesNumbers;
 use StdNumCentroamerica\Data\NicaraguaMunicipios;
 use StdNumCentroamerica\Documents\AbstractDocument;
+use StdNumCentroamerica\ValidationError;
 
 /**
  * Cédula de identidad (CSE): municipio (3) + fecha de nacimiento DDMMAA (6) +
@@ -17,7 +21,7 @@ use StdNumCentroamerica\Documents\AbstractDocument;
  * código de la lista conocida, incompleta (ver {@see NicaraguaMunicipios}), por lo que
  * puede rechazar cédulas válidas. Se pasan a Registry::make() como opciones.
  */
-class Cedula extends AbstractDocument
+class Cedula extends AbstractDocument implements GeneratesNumbers
 {
     private const LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXY';
 
@@ -27,19 +31,30 @@ class Cedula extends AbstractDocument
     ) {
     }
 
-    public function isValid(string $number): bool
+    protected function check(string $compact): ?ValidationError
     {
-        $compact = $this->compact($number);
-
         if (preg_match('/^(\d{3})(\d{2})(\d{2})\d{2}\d{4}([A-Z])$/', $compact, $m) !== 1) {
-            return false;
+            return ValidationError::Format;
         }
 
         [, $municipality, $day, $month, $letter] = $m;
 
-        return $this->isKnownMunicipality((int) $municipality)
-            && checkdate((int) $month, (int) $day, 2000)
-            && (!$this->strictLetter || self::checkLetter(substr($compact, 0, 13)) === $letter);
+        if (!$this->isKnownMunicipality((int) $municipality) || !checkdate((int) $month, (int) $day, 2000)) {
+            return ValidationError::Component;
+        }
+
+        return !$this->strictLetter || self::checkLetter(substr($compact, 0, 13)) === $letter
+            ? null
+            : ValidationError::Checksum;
+    }
+
+    public function generate(): string
+    {
+        $municipality = NicaraguaMunicipios::CODES[array_rand(NicaraguaMunicipios::CODES)];
+        $digits = sprintf('%03d%02d%02d%02d', $municipality, random_int(1, 28), random_int(1, 12), random_int(0, 99))
+            . self::randomDigits(4);
+
+        return $digits . self::checkLetter($digits);
     }
 
     public function format(string $number): string
