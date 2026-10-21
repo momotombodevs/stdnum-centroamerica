@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-20
+
 > Cambio incompatible: `ni.cedula` ya no comprueba la letra de control por defecto.
 
 ### Cambiado
