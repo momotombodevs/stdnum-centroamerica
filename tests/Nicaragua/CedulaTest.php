@@ -7,6 +7,8 @@ namespace StdNumCentroamerica\Tests\Nicaragua;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use StdNumCentroamerica\Documents\Nicaragua\Cedula;
+use StdNumCentroamerica\Documents\Nicaragua\Ruc;
+use StdNumCentroamerica\ValidationError;
 
 class CedulaTest extends TestCase
 {
@@ -37,14 +39,25 @@ class CedulaTest extends TestCase
 
     public function test_modo_estricto_de_letra(): void
     {
-        $lenient = new Cedula(strictLetter: false);
+        $strict = new Cedula(strictLetter: true);
+        $lenient = new Cedula();
 
-        $this->assertTrue((new Cedula())->isValid('001-251075-0012S'));
-        $this->assertFalse((new Cedula())->isValid('001-251075-0012A'));
+        $this->assertTrue($strict->isValid('001-251075-0012S'));
+        $this->assertFalse($strict->isValid('001-251075-0012A'));
         $this->assertTrue($lenient->isValid('001-251075-0012A'));
         // Ejemplo del aviso DGI AVISO/072/05-2022: no cumple el módulo 23.
-        $this->assertFalse((new Cedula())->isValid('0013007660022M'));
+        $this->assertFalse($strict->isValid('0013007660022M'));
         $this->assertTrue($lenient->isValid('0013007660022M'));
+    }
+
+    public function test_la_letra_incorrecta_se_acepta_por_defecto(): void
+    {
+        $this->assertTrue((new Cedula())->isValid('001-010190-0001A'));
+        $this->assertFalse((new Cedula())->isValid('001-010190-0001'));
+        $this->assertSame(
+            ValidationError::Checksum,
+            (new Cedula(strictLetter: true))->validate('001-010190-0001A')->error,
+        );
     }
 
     public function test_modo_estricto_de_municipio(): void
@@ -85,9 +98,23 @@ class CedulaTest extends TestCase
             'día 32' => ['001-320190-0001N'],
             'municipio 000' => ['000-010190-0001V'],
             'municipio fuera de rango' => ['641-010190-0001T'],
-            'letra incorrecta' => ['001-010190-0001A'],
             'sin letra' => ['001-010190-0001'],
             'corta' => ['123'],
         ];
+    }
+
+    public function test_acepta_todos_los_municipios_y_cualquier_letra_por_defecto(): void
+    {
+        $doc = new Cedula();
+        $letters = range('A', 'Z');
+
+        foreach (array_merge(range(1, 640), [888]) as $municipality) {
+            $number = sprintf('%03d150690000%d', $municipality, $municipality % 10)
+                . $letters[$municipality % count($letters)];
+
+            $this->assertTrue($doc->isValid($number), $number);
+            $this->assertTrue($doc->isValid(strtolower($number)), $number);
+            $this->assertTrue((new Ruc())->isValid($number), $number);
+        }
     }
 }

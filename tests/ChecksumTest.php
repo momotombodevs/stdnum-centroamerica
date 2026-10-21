@@ -46,7 +46,10 @@ class ChecksumTest extends TestCase
     #[DataProvider('protegidos')]
     public function test_cualquier_cambio_invalida_el_numero(string $key, string $number, array $positions, string $alphabet): void
     {
-        $this->assertTrue(Registry::isValid($key, $number), 'el número base debe ser válido');
+        // La letra de la cédula nicaragüense solo se comprueba en modo estricto.
+        $options = $key === 'ni.cedula' ? ['strictLetter' => true] : [];
+
+        $this->assertTrue(Registry::isValid($key, $number, $options), 'el número base debe ser válido');
 
         foreach ($positions as $position) {
             foreach (str_split($alphabet) as $replacement) {
@@ -55,7 +58,7 @@ class ChecksumTest extends TestCase
                 }
 
                 $mutated = substr_replace($number, $replacement, $position, 1);
-                $this->assertFalse(Registry::isValid($key, $mutated), "{$key} aceptó {$mutated}");
+                $this->assertFalse(Registry::isValid($key, $mutated, $options), "{$key} aceptó {$mutated}");
             }
         }
     }

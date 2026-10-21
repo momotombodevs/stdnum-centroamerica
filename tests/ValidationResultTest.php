@@ -26,7 +26,6 @@ class ValidationResultTest extends TestCase
             'HN identidad, municipio' => ['hn.identidad', '0899199000001', ValidationError::Component],
             'NI cédula, formato' => ['ni.cedula', '001-010190-00001', ValidationError::Format],
             'NI cédula, fecha' => ['ni.cedula', '001-320190-0001N', ValidationError::Component],
-            'NI cédula, letra' => ['ni.cedula', '001-010190-0001A', ValidationError::Checksum],
             'NI RUC, prefijo 0000' => ['ni.ruc', '0000300766011M', ValidationError::Component],
             'NI RUC, formato' => ['ni.ruc', 'X', ValidationError::Format],
             'PA cédula, formato' => ['pa.cedula', 'ABC', ValidationError::Format],
@@ -46,6 +45,10 @@ class ValidationResultTest extends TestCase
 
     public function test_registry_validate_acepta_opciones(): void
     {
-        $this->assertNull(Registry::validate('ni.cedula', '001-010190-0001A', ['strictLetter' => false])->error);
+        $this->assertNull(Registry::validate('ni.cedula', '001-010190-0001A')->error);
+        $this->assertSame(
+            ValidationError::Checksum,
+            Registry::validate('ni.cedula', '001-010190-0001A', ['strictLetter' => true])->error,
+        );
     }
 }

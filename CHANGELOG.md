@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-20
+
+> Cambio incompatible: `ni.cedula` ya no comprueba la letra de control por defecto.
+
+### Cambiado
+- `strictLetter` pasa de `true` a `false` en `Nicaragua\Cedula`: la fórmula de la letra (módulo 23) sale de fuentes no oficiales y puede rechazar cédulas válidas. Con el default, solo se exige que el último carácter sea una letra. Para comprobarla, use `['strictLetter' => true]`. Afecta también a `ni.ruc` cuando contiene una cédula y a `Registry::parse('ni.cedula', ...)`.
+
 ## [0.3.0] - 2026-10-20
 
 ### Agregado

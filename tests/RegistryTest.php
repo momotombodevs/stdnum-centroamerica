@@ -32,8 +32,8 @@ class RegistryTest extends TestCase
     public function test_opciones_llegan_al_constructor_del_documento(): void
     {
         // 001-010190-0001A tiene letra incorrecta (la correcta es N).
-        $this->assertFalse(Registry::isValid('ni.cedula', '001-010190-0001A'));
-        $this->assertTrue(Registry::isValid('ni.cedula', '001-010190-0001A', ['strictLetter' => false]));
+        $this->assertTrue(Registry::isValid('ni.cedula', '001-010190-0001A'));
+        $this->assertFalse(Registry::isValid('ni.cedula', '001-010190-0001A', ['strictLetter' => true]));
         $this->assertFalse(Registry::isValid('ni.cedula', '282-010190-0001N', ['strictMunicipality' => true]));
     }
 
