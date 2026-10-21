@@ -20,7 +20,7 @@ use StdNumCentroamerica\Registry;
 
 // Validar
 Registry::isValid('ni.cedula', '001-010190-0001N'); // true
-Registry::isValid('ni.cedula', '001-010190-0001A'); // false: la letra de control es N
+Registry::isValid('ni.cedula', '001-010190-0001A'); // true: la letra no se comprueba por defecto
 Registry::isValid('ni.ruc', 'J0310000000001');      // true: persona jurídica
 Registry::isValid('ni.ruc', '0000300766011M');      // false: un RUC no puede iniciar con cuatro ceros
 
@@ -45,16 +45,16 @@ $result->error;     // ValidationError::Checksum
 | `Component` | un componente (fecha, departamento, municipio, prefijo) fuera de lo permitido |
 | `Checksum` | el dígito o la letra de control no coincide |
 
-La cédula valida la letra por defecto. Se puede ajustar con opciones, que `Registry` pasa al constructor:
+La cédula no comprueba la letra por defecto, porque el CSE no publica la fórmula (módulo 23, de fuentes no oficiales). Se puede ajustar con opciones, que `Registry` pasa al constructor:
 
 ```php
-// Sin comprobar la letra
-Registry::isValid('ni.cedula', '001-010190-0001A', ['strictLetter' => false]); // true
+// Comprobar la letra (la correcta de este número es N)
+Registry::isValid('ni.cedula', '001-010190-0001A', ['strictLetter' => true]); // false
 
 // Exigir que el código de municipio esté en la lista conocida (282 no figura en ella)
 $number = '282-010190-0001A';
-Registry::isValid('ni.cedula', $number, ['strictLetter' => false]);                                // true
-Registry::isValid('ni.cedula', $number, ['strictLetter' => false, 'strictMunicipality' => true]);  // false
+Registry::isValid('ni.cedula', $number);                                       // true
+Registry::isValid('ni.cedula', $number, ['strictMunicipality' => true]);          // false
 ```
 
 También se puede usar la clase directamente:
@@ -113,7 +113,7 @@ Una clave desconocida lanza `InvalidArgumentException`. `Registry::keys()` lista
 | El Salvador | NRC | `sv.nrc` | formato |
 | Honduras | Número de identidad | `hn.identidad` | formato (departamento y municipio válidos) |
 | Honduras | RTN | `hn.rtn` | formato |
-| Nicaragua | Cédula | `ni.cedula` | completa (letra de control) |
+| Nicaragua | Cédula | `ni.cedula` | completa (letra de control con `strictLetter`, desactivada por defecto) |
 | Nicaragua | RUC | `ni.ruc` | formato |
 | Costa Rica | Cédula física | `cr.cedula_fisica` | formato |
 | Costa Rica | Cédula jurídica | `cr.cedula_juridica` | formato |
@@ -167,7 +167,7 @@ use StdNumCentroamerica\ValidationError;
 
 class DocumentoCentroamericano implements ValidationRule
 {
-    /** @param array<string, mixed> $options opciones del documento, p. ej. ['strictLetter' => false] */
+    /** @param array<string, mixed> $options opciones del documento, p. ej. ['strictLetter' => true] */
     public function __construct(private string $documento, private array $options = [])
     {
     }
@@ -189,7 +189,7 @@ class DocumentoCentroamericano implements ValidationRule
 
 ```php
 'dpi' => ['required', new DocumentoCentroamericano('gt.dpi')],
-'cedula' => ['required', new DocumentoCentroamericano('ni.cedula', ['strictLetter' => false])],
+'cedula' => ['required', new DocumentoCentroamericano('ni.cedula')],
 ```
 
 Laravel no ejecuta las reglas sobre valores vacíos: combínelas con `required` o `nullable`. Para que los mensajes salgan traducidos, use `lang/es/validation.php` y `trans()` en lugar de las cadenas del ejemplo.

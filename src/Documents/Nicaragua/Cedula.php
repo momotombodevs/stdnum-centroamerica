@@ -17,8 +17,9 @@ use StdNumCentroamerica\ValidationError;
  *
  * Valida formato, fecha plausible, municipio en 001-640 (o 888, nacidos en el
  * extranjero) y la letra: 13 dígitos módulo 23 sobre ABCDEFGHJKLMNPQRSTUVWXY, de
- * fuentes abiertas y una cédula de muestra con MRZ consistente (ver README).
- * Opciones: $strictLetter = false desactiva la letra; $strictMunicipality exige un
+ * fuentes abiertas y una cédula de muestra con MRZ consistente (ver README). El CSE no
+ * publica la fórmula, así que por defecto solo se exige que la letra tenga forma de letra.
+ * Opciones: $strictLetter = true comprueba la letra; $strictMunicipality exige un
  * código de la lista conocida, incompleta (ver {@see NicaraguaMunicipios}), por lo que
  * puede rechazar cédulas válidas. Se pasan a Registry::make() como opciones.
  *
@@ -30,7 +31,7 @@ class Cedula extends AbstractDocument implements GeneratesNumbers, ParsesNumbers
 
     public function __construct(
         private readonly bool $strictMunicipality = false,
-        private readonly bool $strictLetter = true,
+        private readonly bool $strictLetter = false,
     ) {
     }
 
