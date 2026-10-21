@@ -6,6 +6,7 @@ namespace StdNumCentroamerica\Tests\Nicaragua;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use StdNumCentroamerica\Documents\Nicaragua\Cedula;
 use StdNumCentroamerica\Documents\Nicaragua\Ruc;
 
 class RucTest extends TestCase
@@ -30,6 +31,12 @@ class RucTest extends TestCase
         $this->assertSame('J0310000000001', $doc->compact('J0310000000001'));
     }
 
+    public function test_letra_de_cedula_incorrecta_solo_falla_en_modo_estricto(): void
+    {
+        $this->assertTrue((new Ruc())->isValid('001-010190-0001A'));
+        $this->assertFalse((new Ruc(new Cedula(strictLetter: true)))->isValid('001-010190-0001A'));
+    }
+
     public static function validos(): array
     {
         return [
@@ -50,7 +57,6 @@ class RucTest extends TestCase
             ['K0310000000001'],
             ['J031000000000'],
             ['123'],
-            'letra de cédula incorrecta' => ['001-010190-0001A'],
             'cuatro ceros iniciales (DGI)' => ['0000300766011M'],
         ];
     }

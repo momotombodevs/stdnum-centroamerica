@@ -29,5 +29,5 @@ Los números de las pruebas son sintéticos o ejemplos de muestra publicados en 
 ## Decisiones
 
 - Costa Rica: los validadores se escribieron de nuevo, sin reutilizar `gbielbarbosa/stdnum-php`.
-- Las opciones `strictLetter` y `strictMunicipality` de la cédula nicaragüense existen porque la letra y la tabla de municipios no son oficiales; la tabla es incompleta y su modo estricto puede rechazar cédulas válidas.
+- Las opciones `strictLetter` y `strictMunicipality` de la cédula nicaragüense existen porque la letra y la tabla de municipios no son oficiales; ambas son incompletas o no están confirmadas, y su modo estricto puede rechazar cédulas válidas. Por eso ambas están desactivadas por defecto (`strictLetter` desde la próxima versión).
 

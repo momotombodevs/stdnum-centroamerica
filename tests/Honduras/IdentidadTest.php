@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use StdNumCentroamerica\Data\HondurasGeografia;
 use StdNumCentroamerica\Documents\Honduras\Identidad;
+use StdNumCentroamerica\Documents\Honduras\Rtn;
 
 class IdentidadTest extends TestCase
 {
@@ -79,5 +80,20 @@ class IdentidadTest extends TestCase
             'corta' => ['0801-1990-1234'],
             'letras' => ['0801-1990-1234A'],
         ];
+    }
+
+    public function test_acepta_todos_los_departamentos_y_municipios(): void
+    {
+        $doc = new Identidad();
+        $rtn = new Rtn();
+
+        foreach (HondurasGeografia::MUNICIPIOS_POR_DEPARTAMENTO as $department => $municipalities) {
+            for ($municipality = 1; $municipality <= $municipalities; $municipality++) {
+                $number = sprintf('%02d%02d1985', $department, $municipality) . '00001';
+
+                $this->assertTrue($doc->isValid($number), $number);
+                $this->assertTrue($rtn->isValid($number . '7'), $number);
+            }
+        }
     }
 }
