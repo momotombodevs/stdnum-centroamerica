@@ -31,6 +31,9 @@ class CedulaTest extends TestCase
         $this->assertSame('8-926-1601', $doc->format('8--926-1601'));
         // compact() quita los separadores, como en el resto del paquete (pierde tomo/asiento).
         $this->assertSame('89261601', $doc->compact('8-926-1601'));
+        $this->assertSame('8-926-1601', $doc->format("8\u{00A0}926\u{2009}1601"));
+        $this->assertSame('PE-5-687', $doc->format("pe \u{2013} 5\u{00AD}-687"));
+        $this->assertSame('-8-926-1601', $doc->format("\u{2013}8-926-1601"));
     }
 
     public static function validos(): array

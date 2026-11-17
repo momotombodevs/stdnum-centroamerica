@@ -13,6 +13,10 @@ abstract class AbstractDocument implements DocumentInterface
     /** Expresión que debe cumplir el número compacto; la usa el isValid() por defecto. */
     protected const PATTERN = '';
 
+    protected const SPACES = [' ', "\t", "\n", "\r", "\f", "\v", "\u{00A0}", "\u{2007}", "\u{2009}", "\u{202F}"];
+    protected const INVISIBLE = ["\u{00AD}", "\u{200B}", "\u{FEFF}"];
+    protected const DASHES = ['-', "\u{2010}", "\u{2011}", "\u{2012}", "\u{2013}", "\u{2014}", "\u{2015}", "\u{2212}"];
+
     public function isValid(string $number): bool
     {
         return $this->validate($number)->isValid();
@@ -54,7 +58,7 @@ abstract class AbstractDocument implements DocumentInterface
 
     public function compact(string $number): string
     {
-        return strtoupper(str_replace([' ', "\t", "\n", "\r", "\f", "\v", '-'], '', $number));
+        return strtoupper(str_replace([...self::SPACES, ...self::INVISIBLE, ...self::DASHES], '', $number));
     }
 
     /** Sin agrupación propia, el formato es el número compacto. */
