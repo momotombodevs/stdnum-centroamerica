@@ -1,10 +1,10 @@
 # Fuentes y verificación
 
-Todas las consultas se hicieron el 2026-10-19. "Oficial" = documento de la institución o esquema que ella publica; "abierta" = implementaciones de código abierto, sin regla publicada por la institución. Ninguna regla de dígito verificador está publicada oficialmente.
+Las consultas se hicieron el 2026-10-19, salvo las que indican otra fecha. "Oficial" = documento de la institución o esquema que ella publica; "abierta" = implementaciones de código abierto, sin regla publicada por la institución. Ninguna regla de dígito verificador está publicada oficialmente.
 
 | Clave | Qué respalda la regla | Fuente |
 |-------|----------------------|--------|
-| `gt.dpi` | Estructura de 13 dígitos, con el departamento antes del municipio: oficial. Fórmula del verificador (pesos 2..9, módulo 11): abierta. | [RENAP, ¿Qué es el CUI?](https://www.renap.gob.gt/noticias/que-es-el-cui); [cui-gt](https://github.com/aalonzolu/cui-gt) |
+| `gt.dpi` | Estructura de 13 dígitos, con el departamento antes del municipio: oficial. Fórmula del verificador (pesos 2..9, módulo 11): abierta. Municipios por departamento (22 departamentos, 340 municipios; consulta del 2026-11-17): lista de Wikipedia, que coincide con cui-gt salvo en Huehuetenango, donde cui-gt tiene 32 y omite Petatán (municipio 340, creado en 2015). | [RENAP, ¿Qué es el CUI?](https://www.renap.gob.gt/noticias/que-es-el-cui); [cui-gt](https://github.com/aalonzolu/cui-gt); [Municipios de Guatemala](https://en.wikipedia.org/wiki/Municipalities_of_Guatemala) |
 | `gt.nit` | Desde 2023-10-04 el NIT nuevo son los primeros 9 dígitos del CUI: oficial. Fórmula (módulo 11, K): abierta; con cuerpo de 8 dígitos coincide con la del CUI. | [SAT](https://portal.sat.gob.gt/portal/noticias/que-significa-para-el-guatemalteco-la-armonizacion-del-cui-con-el-nit/); [nitv](https://github.com/bronzdoc/nitv) |
 | `sv.dui` | Formato `00000000-0`: esquema DTE oficial. Fórmula (pesos 9..2, módulo 10): abierta; la regla no la publica el RNPN. | [gist gmelendezcr](https://gist.github.com/gmelendezcr/3609421); [idsv-php](https://github.com/avalon-tech/idsv-php) |
 | `sv.nit` | 14 dígitos, o 9 (el DUI): esquemas DTE oficiales y guía de integración. Verificador: abierta (idsv-php); los tres NIT de muestra de la guía oficial lo cumplen. | [DGII, guía de integración DTE](https://factura.gob.sv/wp-content/uploads/2021/11/FESVDGIIMH_GuiaIntegracionFacturaElectronicasSV.pdf); [esquemas DTE (espejo)](https://github.com/herson/dte-json-schemas); [idsv-php](https://github.com/avalon-tech/idsv-php) |
@@ -22,6 +22,7 @@ Los números de las pruebas son sintéticos o ejemplos de muestra publicados en 
 
 ## Por confirmar con cada institución
 
+- Guatemala: tabla oficial de municipios por departamento del INE o RENAP (la actual sale de fuentes secundarias).
 - Contrastar con cada institución las fórmulas de `gt.dpi`, `gt.nit`, `sv.dui` y `sv.nit`, y la letra de `ni.cedula`.
 - Nicaragua: tabla oficial de códigos de municipio del CSE (incluye Mulukukú, creado en 2005 por la Ley 503) y el código 888.
 - Panamá: confirmar con el Tribunal Electoral las claves 10-13 y los sufijos PI y AV; pedir a la DGI la fórmula del DV.
@@ -29,5 +30,5 @@ Los números de las pruebas son sintéticos o ejemplos de muestra publicados en 
 ## Decisiones
 
 - Costa Rica: los validadores se escribieron de nuevo, sin reutilizar `gbielbarbosa/stdnum-php`.
-- Las opciones `strictLetter` y `strictMunicipality` de la cédula nicaragüense existen porque la letra y la tabla de municipios no son oficiales; ambas son incompletas o no están confirmadas, y su modo estricto puede rechazar cédulas válidas. Por eso ambas están desactivadas por defecto (`strictLetter` desde la próxima versión).
+- Las opciones `strictLetter` y `strictMunicipality` de la cédula nicaragüense existen porque la letra y la tabla de municipios no son oficiales; ambas son incompletas o no están confirmadas, y su modo estricto puede rechazar cédulas válidas. Por eso ambas están desactivadas por defecto (`strictLetter` desde 0.4.0).
 
