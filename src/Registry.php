@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace StdNumCentroamerica;
 
 use InvalidArgumentException;
+use ReflectionClass;
+use ReflectionParameter;
 use StdNumCentroamerica\Contracts\DocumentInterface;
 use StdNumCentroamerica\Contracts\GeneratesNumbers;
 use StdNumCentroamerica\Contracts\ParsesNumbers;
@@ -34,14 +36,47 @@ class Registry
         self::$custom[strtolower($key)] = $class;
     }
 
-    /** @param array<string, mixed> $options argumentos con nombre del constructor del documento */
+    /**
+     * @param array<string, mixed> $options argumentos con nombre del constructor del documento
+     * @throws InvalidArgumentException si la clave no existe o una opción no la acepta el documento
+     */
     public static function make(string $key, array $options = []): DocumentInterface
     {
         $key = strtolower($key);
         $class = self::$custom[$key] ?? self::catalog()[$key]->class
             ?? throw new InvalidArgumentException("Documento no soportado: {$key}");
 
+        if ($options !== []) {
+            self::assertAcceptsOptions($key, $class, $options);
+        }
+
         return new $class(...$options);
+    }
+
+    /**
+     * @param class-string $class
+     * @param array<mixed> $options
+     */
+    private static function assertAcceptsOptions(string $key, string $class, array $options): void
+    {
+        $parameters = (new ReflectionClass($class))->getConstructor()?->getParameters() ?? [];
+        foreach ($parameters as $parameter) {
+            if ($parameter->isVariadic()) {
+                return;
+            }
+        }
+
+        $accepted = array_map(static fn (ReflectionParameter $parameter): string => $parameter->getName(), $parameters);
+        $unknown = array_diff(array_keys($options), $accepted);
+
+        if ($unknown !== []) {
+            throw new InvalidArgumentException(sprintf(
+                'Opciones no soportadas por %s: %s. Acepta: %s',
+                $key,
+                implode(', ', $unknown),
+                $accepted === [] ? 'ninguna' : implode(', ', $accepted),
+            ));
+        }
     }
 
     /** @param array<string, mixed> $options ver {@see make()} */
@@ -113,7 +148,7 @@ class Registry
             new DocumentInfo('sv.nrc', ElSalvador\Nrc::class, 'SV', 'NRC', Level::Format),
             new DocumentInfo('hn.identidad', Honduras\Identidad::class, 'HN', 'Número de identidad', Level::Format),
             new DocumentInfo('hn.rtn', Honduras\Rtn::class, 'HN', 'RTN', Level::Format),
-            new DocumentInfo('ni.cedula', Nicaragua\Cedula::class, 'NI', 'Cédula', Level::Complete),
+            new DocumentInfo('ni.cedula', Nicaragua\Cedula::class, 'NI', 'Cédula', Level::Format),
             new DocumentInfo('ni.ruc', Nicaragua\Ruc::class, 'NI', 'RUC', Level::Format),
             new DocumentInfo('cr.cedula_fisica', CostaRica\CedulaFisica::class, 'CR', 'Cédula física', Level::Format),
             new DocumentInfo('cr.cedula_juridica', CostaRica\CedulaJuridica::class, 'CR', 'Cédula jurídica', Level::Format),

@@ -41,7 +41,9 @@ class Cedula extends AbstractDocument implements GeneratesNumbers, ParsesNumbers
     /** Mayúsculas, con un solo guion entre grupos. */
     public static function normalize(string $number): string
     {
-        return strtoupper(preg_replace('/[\s-]+/', '-', trim($number)) ?? '');
+        $text = str_replace(self::SPACES, ' ', str_replace(self::DASHES, '-', str_replace(self::INVISIBLE, '', $number)));
+
+        return strtoupper(preg_replace('/[\s-]+/', '-', trim($text)) ?? '');
     }
 
     protected function prepare(string $number): string

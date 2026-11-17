@@ -76,6 +76,33 @@ abstract class DocumentTestCase extends TestCase
     }
 
     #[DataProvider('validos')]
+    public function test_acepta_espacios_y_guiones_unicode_copiados_de_otro_documento(string $number): void
+    {
+        $document = $this->document();
+        $formatted = $document->format($number);
+
+        foreach (["\u{2010}", "\u{2011}", "\u{2012}", "\u{2013}", "\u{2014}", "\u{2015}", "\u{2212}"] as $dash) {
+            $this->assertTrue($document->isValid(str_replace('-', $dash, $formatted)), bin2hex($dash));
+        }
+        foreach (["\u{00A0}", "\u{2007}", "\u{2009}", "\u{202F}"] as $space) {
+            $this->assertTrue($document->isValid(str_replace(' ', $space, $formatted)), bin2hex($space));
+            $this->assertTrue($document->isValid($space . $formatted . $space), bin2hex($space));
+        }
+        $this->assertTrue($document->isValid("\u{FEFF}" . $formatted . "\u{200B}\u{00AD}"));
+    }
+
+    #[DataProvider('validos')]
+    public function test_rechaza_caracteres_unicode_que_no_son_separadores(string $number): void
+    {
+        $document = $this->document();
+        $compact = $document->compact($number);
+
+        foreach (["\u{3000}", "\u{FF0D}", "\u{2060}", "\u{00B7}", 'é'] as $char) {
+            $this->assertFalse($document->isValid(substr_replace($compact, $char, 1, 0)), bin2hex($char));
+        }
+    }
+
+    #[DataProvider('validos')]
     public function test_un_numero_formateado_sigue_siendo_valido(string $number): void
     {
         $document = $this->document();

@@ -1,6 +1,6 @@
 {
     "name": "momotombo/stdnum-centroamerica",
-    "description": "Validación de documentos de identidad y fiscales para Centroamérica",
+    "description": "Validación de documentos de identidad y fiscales para Centroamérica (Central American national ID and tax ID validation: NIT, DUI, DPI, cédula, RUC, MRZ)",
     "type": "library",
     "keywords": [
         "stdnum",
@@ -16,7 +16,14 @@
         "honduras",
         "nicaragua",
         "costa-rica",
-        "panama"
+        "panama",
+        "validation",
+        "tax-id",
+        "national-id",
+        "mrz",
+        "icao",
+        "passport",
+        "laravel"
     ],
     "homepage": "https://github.com/momotombodevs/stdnum-centroamerica",
     "license": "MIT",
