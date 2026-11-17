@@ -9,7 +9,9 @@ namespace StdNumCentroamerica\Data;
  * En el CUI, los dos últimos pares de dígitos son el departamento (01-22) y el municipio
  * de nacimiento; la Ley del RENAP (Decreto 90-2005) deja los códigos al Directorio, que no
  * publica la tabla. Se asume que son los códigos geográficos del INE, como hacen las
- * implementaciones abiertas (cui-gt).
+ * implementaciones abiertas (cui-gt). Todo CUI lleva un municipio real: los nacidos en el
+ * extranjero, el de Guatemala (0101); naturalizados y extranjeros domiciliados, el de su
+ * inscripción (Acuerdo de Directorio 59-2014, art. 5).
  *
  * Contrastado el 2026-11-17: los códigos del INE (Censo 2018, vía City Population) van
  * del 01 al último de cada departamento sin huecos, suman 340 e incluyen Sipacate (0514,
