@@ -6,13 +6,15 @@ namespace StdNumCentroamerica\Documents\Guatemala;
 
 use StdNumCentroamerica\Contracts\GeneratesNumbers;
 use StdNumCentroamerica\Contracts\ParsesNumbers;
+use StdNumCentroamerica\Data\GuatemalaGeografia;
 use StdNumCentroamerica\Documents\AbstractDocument;
 use StdNumCentroamerica\ValidationError;
 
 /**
  * DPI / CUI (RENAP): 8 dígitos + verificador + departamento (2) + municipio (2).
- * Nivel: completa en el verificador (pesos 2..9, módulo 11; fórmula de código abierto)
- * y en el departamento (01-22). No se valida la tabla de municipios por departamento.
+ * Nivel: completa en el verificador (pesos 2..9, módulo 11; fórmula de código abierto),
+ * el departamento (01-22) y el municipio, dentro de la cantidad real de su departamento
+ * (ver {@see GuatemalaGeografia}).
  *
  * @implements ParsesNumbers<DpiData>
  */
@@ -20,14 +22,13 @@ class Dpi extends AbstractDocument implements GeneratesNumbers, ParsesNumbers
 {
     protected const PATTERN = '/^\d{13}$/';
 
-    private const DEPARTMENTS = 22;
-
     protected function checkContent(string $compact): ?ValidationError
     {
         $department = (int) substr($compact, 9, 2);
         $municipality = (int) substr($compact, 11, 2);
+        $municipalities = GuatemalaGeografia::MUNICIPIOS_POR_DEPARTAMENTO[$department] ?? 0;
 
-        if ($department < 1 || $department > self::DEPARTMENTS || $municipality < 1) {
+        if ($municipality < 1 || $municipality > $municipalities) {
             return ValidationError::Component;
         }
 
@@ -40,8 +41,10 @@ class Dpi extends AbstractDocument implements GeneratesNumbers, ParsesNumbers
             $body = self::randomDigits(8);
         } while (self::checkDigit($body) === 10);
 
-        return $body . self::checkDigit($body)
-            . sprintf('%02d%02d', random_int(1, self::DEPARTMENTS), random_int(1, 20));
+        $department = random_int(1, count(GuatemalaGeografia::MUNICIPIOS_POR_DEPARTAMENTO));
+        $municipality = random_int(1, GuatemalaGeografia::MUNICIPIOS_POR_DEPARTAMENTO[$department]);
+
+        return $body . self::checkDigit($body) . sprintf('%02d%02d', $department, $municipality);
     }
 
     public function parse(string $number): ?DpiData
