@@ -14,9 +14,10 @@ use StdNumCentroamerica\ValidationError;
  * DPI / CUI (RENAP): 8 dígitos + verificador + departamento (2) + municipio (2).
  * Nivel: completa en el verificador (pesos 2..9, módulo 11; fórmula de código abierto),
  * el departamento (01-22) y el municipio, dentro de la cantidad real de su departamento
- * (ver {@see GuatemalaGeografia}). RENAP no publica qué código reciben los nacidos en el
- * extranjero: si un DPI real queda fuera de la tabla, $strictMunicipality = false vuelve a
- * aceptar cualquier municipio desde 01.
+ * (ver {@see GuatemalaGeografia}). Los nacidos en el extranjero llevan 0101 y los
+ * naturalizados y extranjeros domiciliados el municipio donde se inscribieron (Acuerdo de
+ * Directorio 59-2014, art. 5). $strictMunicipality = false acepta cualquier municipio
+ * desde 01, por si la numeración del RENAP difiriera de la del INE.
  *
  * @implements ParsesNumbers<DpiData>
  */

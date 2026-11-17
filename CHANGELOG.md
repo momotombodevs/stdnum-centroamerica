@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Documentación
+- `gt.dpi`: el código de los nacidos en el extranjero (0101) y de naturalizados y extranjeros domiciliados (municipio de inscripción) tiene fuente oficial, el Acuerdo de Directorio 59-2014 del RENAP, art. 5.
+
 ## [0.5.0] - 2026-11-17
 
 > Cambio incompatible: `gt.dpi` rechaza municipios que no existen en su departamento, `Registry::make()` lanza `InvalidArgumentException` con opciones desconocidas o posicionales, y `describe()` reporta `ni.cedula` como `Level::Format`.
