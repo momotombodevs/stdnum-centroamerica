@@ -6,13 +6,15 @@ namespace StdNumCentroamerica\Data;
 
 /**
  * División político-administrativa de Guatemala: 22 departamentos, 340 municipios.
- * En el CUI, los dos últimos pares de dígitos son departamento (01-22) y municipio.
- * Que el municipio sea un correlativo 01..n dentro del departamento lo asumen las
- * implementaciones abiertas (cui-gt); RENAP no publica la tabla.
+ * En el CUI, los dos últimos pares de dígitos son el departamento (01-22) y el municipio
+ * de nacimiento; la Ley del RENAP (Decreto 90-2005) deja los códigos al Directorio, que no
+ * publica la tabla. Se asume que son los códigos geográficos del INE, como hacen las
+ * implementaciones abiertas (cui-gt).
  *
- * Conteos contrastados el 2026-11-17 con la lista de municipios por departamento
- * (Wikipedia, total 340) y con cui-gt, que usa el mismo orden de departamentos pero
- * 32 en Huehuetenango: no incluye Petatán, el municipio 340, creado en 2015.
+ * Contrastado el 2026-11-17: los códigos del INE (Censo 2018, vía City Population) van
+ * del 01 al último de cada departamento sin huecos, suman 340 e incluyen Sipacate (0514,
+ * 2015) y Petatán (1333, 2015). Wikipedia da los mismos conteos; cui-gt tiene 32 en
+ * Huehuetenango porque omite Petatán.
  */
 final class GuatemalaGeografia
 {

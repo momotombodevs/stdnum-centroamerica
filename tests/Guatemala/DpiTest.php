@@ -55,6 +55,19 @@ class DpiTest extends DocumentTestCase
         $this->assertSame(ValidationError::Component, $this->document()->validate($number)->error);
     }
 
+    public function test_sin_strict_municipality_acepta_cualquier_municipio_del_departamento(): void
+    {
+        $lenient = new Dpi(strictMunicipality: false);
+
+        foreach (['1234567890209', '1234567891334', '1234567890199', '1234567892218'] as $number) {
+            $this->assertTrue($lenient->isValid($number), $number);
+        }
+        foreach (['1234567890100', '1234567890001', '1234567892301', '1234567889999'] as $number) {
+            $this->assertSame(ValidationError::Component, $lenient->validate($number)->error, $number);
+        }
+        $this->assertSame(ValidationError::Checksum, $lenient->validate('1234567880199')->error);
+    }
+
     public function test_la_tabla_cubre_22_departamentos_y_340_municipios(): void
     {
         $this->assertSame(range(1, 22), array_keys(GuatemalaGeografia::MUNICIPIOS_POR_DEPARTAMENTO));

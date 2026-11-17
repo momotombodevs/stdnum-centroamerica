@@ -38,6 +38,8 @@ class RegistryTest extends TestCase
         $this->assertTrue(Registry::isValid('ni.cedula', '001-010190-0001A'));
         $this->assertFalse(Registry::isValid('ni.cedula', '001-010190-0001A', ['strictLetter' => true]));
         $this->assertFalse(Registry::isValid('ni.cedula', '282-010190-0001N', ['strictMunicipality' => true]));
+        $this->assertFalse(Registry::isValid('gt.dpi', '1234567890209'));
+        $this->assertTrue(Registry::isValid('gt.dpi', '1234567890209', ['strictMunicipality' => false]));
     }
 
     public function test_opciones_de_documentos_que_delegan_en_otro(): void

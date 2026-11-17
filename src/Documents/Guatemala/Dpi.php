@@ -14,7 +14,9 @@ use StdNumCentroamerica\ValidationError;
  * DPI / CUI (RENAP): 8 dígitos + verificador + departamento (2) + municipio (2).
  * Nivel: completa en el verificador (pesos 2..9, módulo 11; fórmula de código abierto),
  * el departamento (01-22) y el municipio, dentro de la cantidad real de su departamento
- * (ver {@see GuatemalaGeografia}).
+ * (ver {@see GuatemalaGeografia}). RENAP no publica qué código reciben los nacidos en el
+ * extranjero: si un DPI real queda fuera de la tabla, $strictMunicipality = false vuelve a
+ * aceptar cualquier municipio desde 01.
  *
  * @implements ParsesNumbers<DpiData>
  */
@@ -22,13 +24,18 @@ class Dpi extends AbstractDocument implements GeneratesNumbers, ParsesNumbers
 {
     protected const PATTERN = '/^\d{13}$/';
 
+    public function __construct(private readonly bool $strictMunicipality = true)
+    {
+    }
+
     protected function checkContent(string $compact): ?ValidationError
     {
         $department = (int) substr($compact, 9, 2);
         $municipality = (int) substr($compact, 11, 2);
         $municipalities = GuatemalaGeografia::MUNICIPIOS_POR_DEPARTAMENTO[$department] ?? 0;
+        $highest = $this->strictMunicipality || $municipalities === 0 ? $municipalities : 99;
 
-        if ($municipality < 1 || $municipality > $municipalities) {
+        if ($municipality < 1 || $municipality > $highest) {
             return ValidationError::Component;
         }
 
