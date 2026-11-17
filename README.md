@@ -68,6 +68,7 @@ Las opciones de cada documento:
 |-------|--------|-------------|--------|
 | `ni.cedula` | `strictLetter` | `false` | comprueba la letra de control (módulo 23, no oficial) |
 | `ni.cedula` | `strictMunicipality` | `false` | exige un código de la lista conocida de municipios, que está incompleta |
+| `gt.dpi` | `strictMunicipality` | `true` | exige un municipio que exista en el departamento (tabla del INE); con `false`, cualquier municipio desde 01 |
 | `ni.ruc` | `cedula` | `new Cedula()` | la `Cedula` con la que se validan los RUC de personas con cédula |
 | `sv.nit` | `dui` | `new Dui()` | el `Dui` con el que se validan los NIT de 9 dígitos |
 

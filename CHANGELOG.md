@@ -5,7 +5,7 @@
 > Cambio incompatible: `gt.dpi` rechaza municipios que no existen en su departamento, `Registry::make()` lanza `InvalidArgumentException` con opciones desconocidas o posicionales, y `describe()` reporta `ni.cedula` como `Level::Format`.
 
 ### Agregado
-- `gt.dpi` valida el municipio contra la cantidad real de municipios de su departamento (22 departamentos, 340 municipios, `Data\GuatemalaGeografia`); antes aceptaba cualquier municipio desde 01. `generate()` solo produce municipios que existen.
+- `gt.dpi` valida el municipio contra la cantidad real de municipios de su departamento (22 departamentos, 340 municipios, `Data\GuatemalaGeografia`); antes aceptaba cualquier municipio desde 01. `generate()` solo produce municipios que existen. Con `['strictMunicipality' => false]` vuelve a aceptar cualquier municipio desde 01, por si un DPI real (por ejemplo, de un nacido en el extranjero) usa un código fuera de la tabla.
 - `compact()` y la normalización de Panamá aceptan las variantes Unicode de espacios y guiones que llegan al copiar de un PDF o de Word (U+00A0 no separable, U+2007, U+2009 fino, U+202F; U+200B ancho cero, U+FEFF BOM, U+00AD guion suave; U+2010 a U+2015 y U+2212 signo menos).
 
 ### Cambiado
