@@ -7,13 +7,15 @@
 
 Validación, formato y compactado de documentos de identidad y fiscales de Centroamérica. Sin dependencias de producción, PHP >= 8.1.
 
+> Validate, format and parse Central American national and tax IDs (Guatemala, El Salvador, Honduras, Nicaragua, Costa Rica, Panama) and ICAO 9303 MRZ. Docs are in Spanish; the API is the same for every document: `Registry::isValid('gt.nit', $number)`.
+
 ```
 composer require momotombo/stdnum-centroamerica
 ```
 
 ## Uso
 
-Cada documento tiene una clave `país.documento` (`ni.cedula`, `ni.ruc`, ...) y tres operaciones: `isValid()`, `format()` y `compact()`.
+Cada documento tiene una clave `país.documento` (`ni.cedula`, `ni.ruc`, ...). Todos tienen `isValid()`, `validate()`, `format()` y `compact()`; los que codifican datos tienen `parse()`, y todos los incluidos tienen `generate()`.
 
 ```php
 use StdNumCentroamerica\Registry;
@@ -34,9 +36,12 @@ Registry::make('ni.cedula')->compact('001-010190-0001n'); // "0010101900001N"
 ```php
 use StdNumCentroamerica\ValidationError;
 
-$result = Registry::validate('ni.cedula', '001-010190-0001A');
+$result = Registry::validate('sv.dui', '12345678-5');
 $result->isValid(); // false
 $result->error;     // ValidationError::Checksum
+
+Registry::validate('ni.cedula', '001-310290-0001N')->error; // ValidationError::Component: no existe el 31 de febrero
+Registry::validate('gt.nit', 'CF')->error;                  // ValidationError::Format
 ```
 
 | `ValidationError` | Significado |
@@ -56,6 +61,23 @@ $number = '282-010190-0001A';
 Registry::isValid('ni.cedula', $number);                                       // true
 Registry::isValid('ni.cedula', $number, ['strictMunicipality' => true]);          // false
 ```
+
+Las opciones de cada documento:
+
+| Clave | Opción | Por defecto | Efecto |
+|-------|--------|-------------|--------|
+| `ni.cedula` | `strictLetter` | `false` | comprueba la letra de control (módulo 23, no oficial) |
+| `ni.cedula` | `strictMunicipality` | `false` | exige un código de la lista conocida de municipios, que está incompleta |
+| `ni.ruc` | `cedula` | `new Cedula()` | la `Cedula` con la que se validan los RUC de personas con cédula |
+| `sv.nit` | `dui` | `new Dui()` | el `Dui` con el que se validan los NIT de 9 dígitos |
+
+```php
+use StdNumCentroamerica\Documents\Nicaragua\Cedula;
+
+Registry::isValid('ni.ruc', '0010101900001A', ['cedula' => new Cedula(strictLetter: true)]); // false
+```
+
+Los demás documentos no aceptan opciones. Una opción que el documento no tiene (por ejemplo, `strictletter` en minúsculas) lanza `InvalidArgumentException` con la lista de las que sí acepta.
 
 También se puede usar la clase directamente:
 
@@ -107,13 +129,13 @@ Una clave desconocida lanza `InvalidArgumentException`. `Registry::keys()` lista
 | País | Documento | Clave | Nivel |
 |------|-----------|-------|-------|
 | Guatemala | NIT | `gt.nit` | completa |
-| Guatemala | DPI (CUI) | `gt.dpi` | completa (verificador y departamento) |
+| Guatemala | DPI (CUI) | `gt.dpi` | completa (verificador, departamento y municipio) |
 | El Salvador | DUI | `sv.dui` | completa |
 | El Salvador | NIT | `sv.nit` | completa (acepta también el DUI de 9 dígitos) |
 | El Salvador | NRC | `sv.nrc` | formato |
 | Honduras | Número de identidad | `hn.identidad` | formato (departamento y municipio válidos) |
 | Honduras | RTN | `hn.rtn` | formato |
-| Nicaragua | Cédula | `ni.cedula` | completa (letra de control con `strictLetter`, desactivada por defecto) |
+| Nicaragua | Cédula | `ni.cedula` | formato (fecha y municipio; letra de control solo con `strictLetter`) |
 | Nicaragua | RUC | `ni.ruc` | formato |
 | Costa Rica | Cédula física | `cr.cedula_fisica` | formato |
 | Costa Rica | Cédula jurídica | `cr.cedula_juridica` | formato |
@@ -126,6 +148,11 @@ Una clave desconocida lanza `InvalidArgumentException`. `Registry::keys()` lista
 | Internacional | MRZ de identidad (TD2) | `mrz.td2` | completa (ICAO 9303) |
 
 Notas:
+
+- **Formato** no significa que el número exista: sin dígito verificador, cualquier combinación con la forma correcta pasa. `hn.rtn` acepta cualquier serie de 14 dígitos y `sv.nrc` acepta `0`. Tampoco **completa** lo garantiza: un número con el verificador correcto puede no estar asignado a nadie, y el paquete no consulta ningún registro.
+- **Entrada**: se aceptan espacios y guiones, también los que llegan al copiar de un PDF o de Word (espacio no separable, espacio fino, guion largo, raya, signo menos, guion suave). Puntos, barras y guiones bajos se rechazan.
+- `format()` y `compact()` no validan: con un número inválido devuelven el texto limpio en mayúsculas, sin garantía de forma (`format('abc')` da `"ABC"` en `sv.dui` y `"AB-C"` en `gt.nit`). Valide antes de formatear.
+- En **Guatemala**, `CF` (consumidor final) no es un NIT y `gt.nit` lo rechaza. Si su formulario lo admite, acéptelo aparte: `$nit === 'CF' || Registry::isValid('gt.nit', $nit)`.
 
 - Las **MRZ** (zona de lectura mecánica de pasaportes y cédulas) se reciben con o sin saltos de línea. `Registry::parse()` devuelve los datos de una MRZ válida; las fechas quedan en `AAMMDD`, porque el siglo no se puede inferir. No se valida el número de pasaporte de cada país, solo la MRZ, que es un estándar público. El paquete valida pero no guarda ni registra nada.
 
@@ -147,7 +174,7 @@ public function rules(): array
 {
     return [
         'dpi' => ['required', function (string $attribute, mixed $value, Closure $fail) {
-            if (! Registry::isValid('gt.dpi', (string) $value)) {
+            if (! is_string($value) || ! Registry::isValid('gt.dpi', $value)) {
                 $fail('El campo :attribute no es un DPI válido.');
             }
         }],
@@ -174,7 +201,13 @@ class DocumentoCentroamericano implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $error = Registry::validate($this->documento, (string) $value, $this->options)->error;
+        if (! is_string($value)) {
+            $fail('El campo :attribute debe ser texto.');
+
+            return;
+        }
+
+        $error = Registry::validate($this->documento, $value, $this->options)->error;
 
         if ($error !== null) {
             $fail(match ($error) {
@@ -199,7 +232,9 @@ Laravel no ejecuta las reglas sobre valores vacíos: combínelas con `required` 
 ```php
 protected function prepareForValidation(): void
 {
-    $this->merge(['dpi' => Registry::make('gt.dpi')->compact((string) $this->dpi)]);
+    if (is_string($this->dpi)) {
+        $this->merge(['dpi' => Registry::make('gt.dpi')->compact($this->dpi)]);
+    }
 }
 ```
 
@@ -227,7 +262,11 @@ composer ci   # estilo (php-cs-fixer), análisis estático (phpstan nivel 8) y p
 
 `composer cs:fix` aplica el estilo; `composer test`, `composer analyse` y `composer cs` corren cada paso por separado.
 
-Para agregar un documento: clase en `src/Documents/<Pais>/` que extienda `AbstractDocument` (con `PATTERN` si basta una expresión regular; las reglas adicionales van en `checkContent()`, que devuelve un `ValidationError` o `null`; sin `PATTERN`, sobrescriba `check()`; `prepare()` cambia la forma sobre la que se valida), implemente `GeneratesNumbers`, prueba en `tests/<Pais>/` que extienda `DocumentTestCase`, clave en `Registry::DOCUMENTS` y fila en la tabla de arriba y en `docs/fuentes.md`.
+Para agregar un documento: clase en `src/Documents/<Pais>/` que extienda `AbstractDocument` (con `PATTERN` si basta una expresión regular; las reglas adicionales van en `checkContent()`, que devuelve un `ValidationError` o `null`; sin `PATTERN`, sobrescriba `check()`; `prepare()` cambia la forma sobre la que se valida), implemente `GeneratesNumbers`, prueba en `tests/<Pais>/` que extienda `DocumentTestCase`, un `DocumentInfo` en `Registry::catalog()` y fila en la tabla de arriba y en `docs/fuentes.md`.
+
+## Versiones
+
+El paquete sigue [SemVer](https://semver.org/lang/es/) y está en 0.x: una versión menor (0.4 → 0.5) puede traer cambios incompatibles, que se marcan al inicio de su entrada en el [CHANGELOG](CHANGELOG.md). Cuentan como incompatibles los cambios en la API pública y también los que hacen que un número antes válido se rechace (una regla nueva, un valor por defecto más estricto). Fije la versión menor en `composer.json` (`^0.4`).
 
 ## Contribuir y seguridad
 

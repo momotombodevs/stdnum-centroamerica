@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace StdNumCentroamerica\Tests;
 
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use StdNumCentroamerica\Contracts\DocumentInterface;
 use StdNumCentroamerica\Documents\CostaRica\Nite;
+use StdNumCentroamerica\Documents\ElSalvador\Dui;
 use StdNumCentroamerica\Documents\Guatemala\Nit;
+use StdNumCentroamerica\Documents\Nicaragua\Cedula;
 use StdNumCentroamerica\Level;
 use StdNumCentroamerica\Registry;
 
@@ -35,6 +38,61 @@ class RegistryTest extends TestCase
         $this->assertTrue(Registry::isValid('ni.cedula', '001-010190-0001A'));
         $this->assertFalse(Registry::isValid('ni.cedula', '001-010190-0001A', ['strictLetter' => true]));
         $this->assertFalse(Registry::isValid('ni.cedula', '282-010190-0001N', ['strictMunicipality' => true]));
+    }
+
+    public function test_opciones_de_documentos_que_delegan_en_otro(): void
+    {
+        $this->assertTrue(Registry::isValid('ni.ruc', '0010101900001A'));
+        $this->assertFalse(Registry::isValid('ni.ruc', '0010101900001A', ['cedula' => new Cedula(strictLetter: true)]));
+        $this->assertTrue(Registry::isValid('ni.ruc', '0010101900001N', ['cedula' => new Cedula(strictLetter: true)]));
+        $this->assertTrue(Registry::isValid('sv.nit', '12345678-4', ['dui' => new Dui()]));
+    }
+
+    /** @return array<string, array{string, array<string, mixed>, string}> */
+    public static function opcionesDesconocidas(): array
+    {
+        return [
+            'mayúsculas distintas' => ['ni.cedula', ['strictletter' => true], 'strictletter'],
+            'documento sin opciones' => ['sv.dui', ['foo' => 1], 'ninguna'],
+            'opción de la cédula en el RUC' => ['ni.ruc', ['strictLetter' => true], 'cedula'],
+        ];
+    }
+
+    /** @param array<string, mixed> $options */
+    #[DataProvider('opcionesDesconocidas')]
+    public function test_opcion_desconocida_lanza_excepcion_con_las_aceptadas(string $key, array $options, string $mentioned): void
+    {
+        foreach ([
+            fn () => Registry::make($key, $options),
+            fn () => Registry::isValid($key, '1', $options),
+            fn () => Registry::validate($key, '1', $options),
+            fn () => Registry::generate($key, $options),
+        ] as $call) {
+            try {
+                $call();
+                $this->fail("{$key} aceptó " . json_encode($options));
+            } catch (InvalidArgumentException $e) {
+                $this->assertStringContainsString($mentioned, $e->getMessage());
+            }
+        }
+    }
+
+    public function test_documento_propio_variadico_acepta_cualquier_opcion(): void
+    {
+        $document = new class () extends Nite {
+            /** @var array<int|string, mixed> */
+            public array $received = [];
+
+            public function __construct(mixed ...$options)
+            {
+                $this->received = $options;
+            }
+        };
+        Registry::register('xx.variadico', $document::class);
+
+        $made = Registry::make('xx.variadico', ['cualquiera' => 1]);
+        $this->assertInstanceOf($document::class, $made);
+        $this->assertSame(['cualquiera' => 1], $made->received);
     }
 
     public function test_describe_lista_los_documentos_incluidos(): void
